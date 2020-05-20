@@ -30,7 +30,7 @@ class DnDpPin(DalitzPhsp):
         # print('  t2:  {:.3f}'.format(self.t2))
 
     def wint(self, a1, a2):
-        return MagSq(a1+a2)
+        return MagSq(a1-a2)
 
     def woint(self, a1, a2):
         return MagSq(a1)+MagSq(a2)
@@ -96,8 +96,8 @@ class DnDpPin(DalitzPhsp):
         return np.linspace(self.mBCsqRange[0], self.mBCsqRange[1], b2)
 
 def tdd(mdd):
-    """ Kinetic energy of D0D- in their frame """
-    return mdd - mdp - mdn #*(mdn+mdp)**2 / (mdn*mdp)
+    """ Kinetic energy of D0D+ in their frame """
+    return mdd - mdp - mdn
 
 def dpi_dpi_plot(ax, pdf, logplot=True):
     (mdnpi, mdppi), _ = pdf.mgridACBC(500)
@@ -164,13 +164,10 @@ def dppi_plot(ax, pdf, sqrt=True):
 def main():
     """ Unit test """
     import sys
-    gs = (30 + 0.5j) * 10**-3
-    gt = (30 + 0.5j) * 10**-3
     E = float(sys.argv[1]) * 10**-3
 
     pdf = DnDpPin(gs, gt, E)
     fig, axs = plt.subplots(2, 4, figsize=(16,8))
-    # fig.suptitle(r'$[D^{*+} \to D^+ \pi^0] D^0$ and ' + r'$[D^{*0} \to D^0 \pi^0] D^+$' + f'  E={E*1000} MeV', fontsize=18)
 
     dpi_dpi_plot(axs[0,0], pdf)
     dd_dpi_plot(axs[1,0], pdf)

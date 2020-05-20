@@ -12,6 +12,10 @@ gamma_star_p = 85.5e-6
 br_dstp_dppin = 0.307  # D*+ -> D+ pi0
 br_dstp_dnpip = 0.677  # D*+ -> D0 pi+
 br_dstn_dnpin = 0.647  # D*0 -> D0 pi0
+br_dstn_dngam = 0.353  # D*0 -> D0 gamma
+
+gs = ( 30 + 1.j) * 10**-3
+gt = (-30 + 1.j) * 10**-3
 
 #######################
 ##  D0D+pi0  options ##
