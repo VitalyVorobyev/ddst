@@ -9,13 +9,15 @@ from lineshape_hanhart import TMtx, RelativisticBreitWigner, MagSq
 
 class DnDpPin(DalitzPhsp):
     """ """
-    def __init__(self, gs, gt, E, channels=[True, True]):
+    def __init__(self, gs, gt, E, channels=[include_dstndp, include_dstndn], interf=interf_dndstp_dpdstn):
         super(DnDpPin, self).__init__(E + TMtx.thr, mdn, mdp, mpin)
         self.tmtx = TMtx(gs, gt)
-        self.bwdstp = lambda s: RelativisticBreitWigner(s, mdstp, gamma_star_p)
-        self.bwdstn = lambda s: RelativisticBreitWigner(s, mdstn, gamma_star_n)
         self.setE(E)
-        self.ch = channels
+        self.bwdstp = lambda s: RelativisticBreitWigner(s, mdstp, gamma_star_p) * np.sqrt(br_dstp_dppin)
+        self.bwdstn = lambda s: RelativisticBreitWigner(s, mdstn, gamma_star_n) * np.sqrt(br_dstn_dnpin)
+        self.a1 = self.ampl1 if channels[0] else lambda x: 0
+        self.a2 = self.ampl2 if channels[1] else lambda x: 0
+        self.pdf = self.wint if interf else self.woint
 
     def setE(self, E):
         tmtx = self.tmtx(E)
@@ -27,11 +29,22 @@ class DnDpPin(DalitzPhsp):
         # print('  t1:  {:.3f}'.format(self.t1))
         # print('  t2:  {:.3f}'.format(self.t2))
 
+    def wint(self, a1, a2):
+        return MagSq(a1+a2)
+
+    def woint(self, a1, a2):
+        return MagSq(a1)+MagSq(a2)
+
+    def ampl1(self, mdppi):
+        """ D0 D*+ amplitude """
+        return self.t1 * self.bwdstp(mdppi)
+
+    def ampl2(self, mdnpi):
+        """ D+ D*0 amplitude"""
+        return self.t2 * self.bwdstn(mdnpi)
+
     def calc(self, mdd, mdnpi):
-        mdppi = self.mZsq(mdd, mdnpi)
-        ampl1 = self.t1 * self.bwdstp(mdppi)
-        ampl2 = self.t2 * self.bwdstn(mdnpi)
-        return self.KineC(mdd) * (MagSq(ampl1)*br_dstp_dppin + MagSq(ampl2)*br_dstn_dnnin)
+        return self.KineC(mdd) * self.pdf(self.a1(self.mZsq(mdd, mdnpi)), self.a2(mdnpi))
 
     def __call__(self, mdd, mdnpi):
         mask = self.inPhspABAC(mdd, mdnpi)

@@ -17,9 +17,9 @@ def tdd(mdd, m1, m2):
 
 def getddspec(gs, gt, emin=-2, emax=3):
     """ """
-    N = 1000
-    bins=1000
-    bins2=1000
+    N = 512
+    bins=512
+    bins2=512
     E = np.linspace(emin, emax, N)*10**-3
     I = [np.zeros(bins), np.zeros(bins)]
     tfcn = [lambda x: tdd(x, mdn, mdn), lambda x: tdd(x, mdn, mdp)]
@@ -49,9 +49,9 @@ def getddspec(gs, gt, emin=-2, emax=3):
 
 def getdpispec(gs, gt, emin=-2, emax=3):
     """ """
-    N = 1024
-    bins=1024
-    bins2=1024
+    N = 512
+    bins=512
+    bins2=512
     E = np.linspace(emin, emax, N)*10**-3
     I = [np.zeros(bins2) for _ in range(3)]
     pdf = [DnDnPip(gs, gt, E[-1]), DnDpPin(gs, gt, E[-1])]
@@ -98,5 +98,5 @@ if __name__ == '__main__':
     elo, ehi = [float(x) for x in sys.argv[1:]]
     gs = (30 + 1j) * 10**-3
     gt = (-30 + 1j) * 10**-3
-    # getddspec(gs, gt, elo, ehi)
-    getdpispec(gs, gt, elo, ehi)
+    getddspec(gs, gt, elo, ehi)
+    # getdpispec(gs, gt, elo, ehi)
