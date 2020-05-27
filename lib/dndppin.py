@@ -7,14 +7,16 @@ from params import *
 from dalitzphsp import DalitzPhsp
 from lineshape_hanhart import TMtx, RelativisticBreitWigner, MagSq
 
+VERB=False
+
 class DnDpPin(DalitzPhsp):
     """ """
     def __init__(self, gs, gt, E, channels=[include_dstndp, include_dstndn], interf=interf_dndstp_dpdstn):
         super(DnDpPin, self).__init__(E + TMtx.thr, mdn, mdp, mpin)
         self.tmtx = TMtx(gs, gt)
         self.setE(E)
-        self.bwdstp = lambda s: RelativisticBreitWigner(s, mdstp, gamma_star_p) * np.sqrt(br_dstp_dppin)
-        self.bwdstn = lambda s: RelativisticBreitWigner(s, mdstn, gamma_star_n) * np.sqrt(br_dstn_dnpin)
+        self.bwdstp = lambda s: RelativisticBreitWigner(s, mdstp, gamma_star_p)  # * np.sqrt(br_dstp_dppin)
+        self.bwdstn = lambda s: RelativisticBreitWigner(s, mdstn, gamma_star_n)  # * np.sqrt(br_dstn_dnpin)
         self.a1 = self.ampl1 if channels[0] else lambda x: 0
         self.a2 = self.ampl2 if channels[1] else lambda x: 0
         self.pdf = self.wint if interf else self.woint
@@ -24,10 +26,11 @@ class DnDpPin(DalitzPhsp):
         self.t1 = np.sum(tmtx[0])  # D0 D*+
         self.t2 = np.sum(tmtx[1])  # D+ D*0
         self.setM(E + TMtx.thr)
-        print('##### DDPi: E {:.3f} MeV #####'.format(E*10**3))
-        # print('  mX:  {:.3f} MeV'.format(self.mo*10**3))
-        # print('  t1:  {:.3f}'.format(self.t1))
-        # print('  t2:  {:.3f}'.format(self.t2))
+        if VERB:
+            print('##### DDPi: E {:.3f} MeV #####'.format(E*10**3))
+            print('  mX:  {:.3f} MeV'.format(self.mo*10**3))
+            print('  t1:  {:.3f}'.format(self.t1))
+            print('  t2:  {:.3f}'.format(self.t2))
 
     def wint(self, a1, a2):
         return MagSq(a1-a2)
@@ -58,42 +61,39 @@ class DnDpPin(DalitzPhsp):
             result[mask] = r
         return (result, mask)
 
-    def integral(self, E, b1=1000, b2=1000):
-        """ """
-        self.setE(E)
-        (mdd, mdnpi), ds = self.mgridABAC(b1, b2)
-        return ds * np.sum(self(mdd, mdnpi))
-
-    def mddspec(self, E=None, b1=1000, b2=1000):
+    def spec(self, E=None, b1=1000, b2=1000, grid=None):
         """ """
         if E is not None:
             self.setE(E)
-        (mdd, mdnpi), ds = self.mgridABAC(b1, b2)
-        return ds * np.sum(self(mdd, mdnpi)[0], axis=0)
+        if grid is None:
+            (mdd, mdnpi), ds = self.mgridABAC(b1, b2)
+        else:
+            mdd, mdnpi = grid
+            ds = (mdd[0,1]-mdd[0,0])*(mdnpi[1,0]-mdnpi[0,0])
+        return ds * self(mdd, mdnpi)[0]
 
-    def mdnpispec(self, E=None, b1=1000, b2=1000):
+    def integral(self, E=None, b1=1000, b2=1000, grid=None):
+        """ """
+        return np.sum(self.spec(E, b1, b2, grid))
+
+    def mddspec(self, E=None, b1=1000, b2=1000, grid=None):
+        """ """
+        return np.sum(self.spec(E, b1, b2, grid), axis=0)
+
+    def mdnpispec(self, E=None, b1=1000, b2=1000, grid=None):
+        """ """
+        return np.sum(self.spec(E, b1, b2, grid), axis=1)
+
+    def mdppispec(self, E=None, b1=1000, b2=1000, grid=None):
         """ """
         if E is not None:
             self.setE(E)
-        (mdd, mdnpi), ds = self.mgridABAC(b1, b2)
-        return ds * np.sum(self(mdd, mdnpi)[0], axis=1)
-
-    def mdppispec(self, E=None, b1=1000, b2=1000):
-        """ """
-        if E is not None:
-            self.setE(E)
-        (mdnpi, mdppi), ds = self.mgridACBC(b1, b2)
-        mdd = self.mZsq(mdnpi, mdppi)
-        return ds * np.sum(self(mdd, mdnpi)[0], axis=1)
-
-    def mddbins(self, b1=1000):
-        return np.linspace(self.mABsqRange[0], self.mABsqRange[1], b1)
-
-    def mdnpibins(self, b2=1000):
-        return np.linspace(self.mACsqRange[0], self.mACsqRange[1], b2)
-
-    def mdppibins(self, b2=1000):
-        return np.linspace(self.mBCsqRange[0], self.mBCsqRange[1], b2)
+        if grid is None:
+            (mdnpi, mdppi), ds = self.mgridACBC(b1, b2)
+        else:
+            mdnpi, mdppi = grid
+            ds = (mdnpi[0,1]-mdnpi[0,0])*(mdppi[1,0]-mdppi[0,0])
+        return ds * np.sum(self(self.mZsq(mdnpi, mdppi), mdnpi)[0], axis=1)
 
 def tdd(mdd):
     """ Kinetic energy of D0D+ in their frame """
@@ -107,9 +107,9 @@ def dpi_dpi_plot(ax, pdf, logplot=True):
         z = np.log(z+1.000000001)
     phsp = np.zeros(mdd.shape)
     phsp[mask] = 1
-    ax.contourf(mdppi, mdnpi, z, cmap=None, levels=100)
-    ax.set(xlabel=r'$m(D^+\pi^0)$', ylabel=r'$m(D^0\pi^0)$')
-    ax.contour(mdppi, mdnpi, phsp, levels=1)
+    ax.contourf(mdnpi, mdppi, z, cmap=None, levels=100)
+    ax.set(ylabel=r'$m(D^+\pi^0)$', xlabel=r'$m(D^0\pi^0)$')
+    ax.contour(mdnpi, mdppi, phsp, levels=1)
 
 def dd_dpi_plot(ax, pdf, logplot=True):
     (mdd, mdnpi), _ = pdf.mgridABAC(500)
@@ -118,13 +118,14 @@ def dd_dpi_plot(ax, pdf, logplot=True):
         z = np.log(z+1.000000001)
     phsp = np.zeros(mdd.shape)
     phsp[mask] = 1
-    ax.contourf(mdd, mdnpi, z, cmap=None, levels=100)
-    ax.set(xlabel=r'$m(D^0D^+)$', ylabel=r'$m(D^0\pi^0)$')
-    ax.contour(mdd, mdnpi, phsp, levels=1)
+    ax.contourf(mdnpi, mdd, z, cmap=None, levels=100)
+    ax.set(ylabel=r'$m(D^0D^+)$', xlabel=r'$m(D^0\pi^0)$')
+    ax.contour(mdnpi, mdd, phsp, levels=1)
 
 def dd_plot(ax, pdf, sqrt=True):
-    bins = pdf.mddbins()
-    mdd = pdf.mddspec()
+    nbins=DalitzNBins
+    bins = pdf.linspaceAB(nbins)
+    mdd = pdf.mddspec(b1=nbins, b2=nbins)
     if sqrt:
         mdd = mdd*2*np.sqrt(bins)
         bins = tdd(np.sqrt(bins))*10**3
@@ -136,8 +137,9 @@ def dd_plot(ax, pdf, sqrt=True):
     ax.plot(bins, mdd)
 
 def dnpi_plot(ax, pdf, sqrt=True):
-    bins = pdf.mdnpibins()
-    mdnpi = pdf.mdnpispec()
+    nbins=DalitzNBins
+    bins = pdf.linspaceAC(nbins)
+    mdnpi = pdf.mdnpispec(b1=nbins, b2=nbins)
     if sqrt:
         bins = np.sqrt(bins)
         mdnpi *= 2*bins
@@ -149,8 +151,9 @@ def dnpi_plot(ax, pdf, sqrt=True):
     ax.plot(bins, mdnpi)
 
 def dppi_plot(ax, pdf, sqrt=True):
-    bins = pdf.mdppibins()
-    mdppi = pdf.mdppispec()
+    nbins=DalitzNBins
+    bins = pdf.linspaceBC(nbins)
+    mdppi = pdf.mdppispec(b1=nbins, b2=nbins)
     if sqrt:
         bins = np.sqrt(bins)
         mdppi *= 2*bins

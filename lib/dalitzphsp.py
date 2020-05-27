@@ -23,16 +23,25 @@ class DalitzPhsp(object):
         self.mABsqRange  = np.array([(self.da[0] + self.da[1])**2, (M - self.da[2])**2])
         self.mBCsqRange  = np.array([(self.da[1] + self.da[2])**2, (M - self.da[0])**2])
 
+    def linspaceAB(self, bins=250):
+        """ """
+        return np.linspace(self.mABsqRange[0], self.mABsqRange[1], bins)
+
+    def linspaceAC(self, bins=250):
+        """ """
+        return np.linspace(self.mACsqRange[0], self.mACsqRange[1], bins)
+
+    def linspaceBC(self, bins=250):
+        """ """
+        return np.linspace(self.mBCsqRange[0], self.mBCsqRange[1], bins)
+
     def mgridABAC(self, b1, b2=None):
         """ """
         if b2 is None:
             b2 = b1
         dAB = (self.mABsqRange[1] - self.mABsqRange[0]) / b1
         dAC = (self.mACsqRange[1] - self.mACsqRange[0]) / b2
-        return (np.meshgrid(
-            np.linspace(self.mABsqRange[0], self.mABsqRange[1], b1),
-            np.linspace(self.mACsqRange[0], self.mACsqRange[1], b2)
-        ), dAB*dAC)
+        return (np.meshgrid(self.linspaceAB(b1), self.linspaceAC(b2)), dAB*dAC)
 
     def mgridACBC(self, b1, b2=None):
         """ """
@@ -40,10 +49,7 @@ class DalitzPhsp(object):
             b2 = b1
         dAC = (self.mACsqRange[1] - self.mACsqRange[0]) / b1
         dBC = (self.mBCsqRange[1] - self.mBCsqRange[0]) / b2
-        return (np.meshgrid(
-            np.linspace(self.mACsqRange[0], self.mACsqRange[1], b1),
-            np.linspace(self.mBCsqRange[0], self.mBCsqRange[1], b2)
-        ), dBC*dAC)
+        return (np.meshgrid(self.linspaceAC(b1), self.linspaceBC(b2)), dBC*dAC)
 
     def eB_AB(self, mABsq):
         """ E(B) in the (AB) frame """

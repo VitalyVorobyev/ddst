@@ -17,17 +17,22 @@ br_dstn_dngam = 0.353  # D*0 -> D0 gamma
 gs = ( 30 + 1.j) * 10**-3
 gt = (-30 + 1.j) * 10**-3
 
+DalitzNBins = 1000
+GammaScale = 0.032
+
 #######################
 ##  D0D+pi0  options ##
 #######################
 # Turn on interference between D*0D+ and D*+D0 in the D0D+pi0 channel
 interf_dndstp_dpdstn = True
-# if False the D*0D+ amplitude is excluded
+# if False the [D*0->D0 pi0]D+ amplitude is excluded
 include_dstndn = True
-# if False the D*+D0 amplitude is excluded
+# if False the [D*+->D+ pi0]D0 amplitude is excluded
 include_dstndp = True
 #######################
 
+datapath = '/home/vitaly/work/lhcb/DDpi'
+datafile = '/'.join([datapath, 'all.root'])
 
 if __name__ == '__main__':
     print('m(D0) + m(D*+): {:.3f}'.format(mdn + mdstp))

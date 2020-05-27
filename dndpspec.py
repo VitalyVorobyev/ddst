@@ -4,9 +4,7 @@
 import sys
 sys.path.append('./lib')
 
-import numpy as onp
 import numpy as np
-# import jax.numpy as np
 import matplotlib.pyplot as plt
 
 from dndnpip import DnDnPip
@@ -18,7 +16,7 @@ def tdd(mdd, m1, m2):
     """ Kinetic energy of D0D- in their frame """
     return mdd - m1 - m2
 
-def getddspec(emin=-2, emax=3):
+def getddspec(emin=-0.5, emax=0.2):
     """ """
     N = 512
     bins=1024
@@ -31,27 +29,26 @@ def getddspec(emin=-2, emax=3):
     ]
     pdf = [
         DnDnPip(gs, gt, E[-1]),
-        DnDpPin(gs, gt, E[-1]),
-        DnDpGam(gs, gt, E[-1])
+        DnDpPin(gs, gt, E[-1], [True, False], False),
+        DnDpPin(gs, gt, E[-1], [False, True], False)
     ]
     I = [np.zeros(bins) for _ in pdf]
     grids = [p.mgridABAC(bins, bins2)[0] for p in pdf]
-    mddSq = [p.linspaceAB(bins) for p in pdf]
+    mddSq = [g[0][0] for g in grids]
     labels = [
-        r'$D^0D^0(\pi^+)$',
-        r'$D^0D^+(\pi^0)$',
-        r'$D^0D^+(\gamma)$',
+        r'$D^0[D^{*+}\to D^0\pi^+$',
+        r'$D^0[D^{*+}\to D^+\pi^0]$',
+        r'$D^+[D^{*0}\to D^0\pi^0]$'
     ]
     print(mddSq)
     for energy in E:
-        for i, p, g in zip(I, pdf, grids):
+        for idx, p in enumerate(pdf):
             p.setE(energy)
-            i += p.mddspec(grid=g)
+            I[idx] += np.sum(p(*grids[idx])[0], axis=0)
 
     I = [i*np.sqrt(m) for i,m in zip(I, mddSq)]  # Jacobian d(m^2) = 2m*dm
     mdd = [t(np.sqrt(m))*10**3 for m, t in zip(mddSq, tfcn)]
-    # norm = [np.sum(i) * (m[-1] - m[0]) / bins for i,m in zip(I, mdd)]
-    norm = [p.linspaceAB(bins)[1]-p.linspaceAB(bins)[0] for p in pdf]
+    norm = [np.sum(i) * (m[-1] - m[0]) / bins for i,m in zip(I, mdd)]
     I = [i / n for i,n in zip(I, norm)]
     plt.figure(figsize=(8,6))
     for m, i, l in zip(mdd, I, labels):

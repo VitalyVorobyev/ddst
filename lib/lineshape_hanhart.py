@@ -1,6 +1,8 @@
 """ [Hanhart, arXiv:1602.00940] """
 
+import numpy as onp
 import numpy as np
+# import jax.numpy as np
 from params import *
 
 def rmass(m1, m2):
