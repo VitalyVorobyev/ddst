@@ -37,7 +37,7 @@ def smear_tdd(tdd, p, dots=250):
 def smear_mdpi(mdpi, p, dots=250):
     """ """
     # newx = np.linspace(mdpi[0], mdpi[-1], dots)
-    newx = np.linspace(mdpi[0], 2.016, dots)
+    newx = np.linspace(mdpi[0], 2.020, dots)
     appx = newx[newx>mdpi[-1]]
     mdpi = np.append(mdpi, appx)
     p = np.append(p, np.zeros(appx.shape))

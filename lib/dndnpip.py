@@ -28,8 +28,8 @@ class DnDnPip(DalitzPhsp):
     def calc(self, mdd, md1pi):
         md2pi = self.mZsq(mdd, md1pi)
         ampl = self.t * (self.bwdstp(md1pi) + self.bwdstp(md2pi))
-        return self.KineC(mdd) * MagSq(ampl) * 2  # factor 2 is from isospin symmetry
-
+        return self.KineC(mdd) * MagSq(ampl) # * 2  # factor 2 is from isospin symmetry
+    
     def __call__(self, mdd, md1pi):
         mask = self.inPhspABAC(mdd, md1pi)
         mddv, md1piv = [x if isinstance(x, float) else x[mask] for x in [mdd, md1pi]]

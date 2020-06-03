@@ -2,6 +2,14 @@
 
 import numpy as np
 
+def Kallen(Msq, m1sq, m2sq):
+    """ Kallen's triangle function """
+    return (Msq - m1sq - m2sq)**2 - 4*m1sq*m2sq
+
+def two_body_momentum(M, m1sq, m2sq):
+    """ """
+    return 0.5 * Kallen(M**2, m1sq, m2sq) / M
+
 class DalitzPhsp(object):
     """ A Dalitz phase space tool. Only required features implemented """
 
@@ -62,6 +70,10 @@ class DalitzPhsp(object):
     def eC_AB(self, mABsq):
         """ E(C) in the (AB) frame """
         return 0.5 * (self.moSq - mABsq - self.daSq[2]) / np.sqrt(mABsq)
+
+    def dbl_pBpC_AB(self, mABsq, mBCsq):
+        """ double scalar product of pB and pC in the AB system """
+        return self.daSq[1] + self.daSq[2] - mBCsq + 2.*self.eB_AB(mABsq)*self.eC_AB(mABsq)
 
     def eC_AC(self, mACsq):
         """ E(C) in the (AC) frame """

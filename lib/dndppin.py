@@ -11,14 +11,16 @@ VERB=False
 
 class DnDpPin(DalitzPhsp):
     """ """
-    def __init__(self, gs, gt, E, channels=[include_dstndp, include_dstndn], interf=interf_dndstp_dpdstn):
+    def __init__(self, gs, gt, E, channels=[include_dstpdn, include_dstndp, include_dd_pwave], interf=interf_dndstp_dpdstn):
         super(DnDpPin, self).__init__(E + TMtx.thr, mdn, mdp, mpin)
         self.tmtx = TMtx(gs, gt)
         self.setE(E)
+        self.alpha = alpha_pwave
         self.bwdstp = lambda s: RelativisticBreitWigner(s, mdstp, gamma_star_p)  # * np.sqrt(br_dstp_dppin)
         self.bwdstn = lambda s: RelativisticBreitWigner(s, mdstn, gamma_star_n)  # * np.sqrt(br_dstn_dnpin)
         self.a1 = self.ampl1 if channels[0] else lambda x: 0
         self.a2 = self.ampl2 if channels[1] else lambda x: 0
+        self.a3 = self.pwave if channels[2] else lambda x,y: 0
         self.pdf = self.wint if interf else self.woint
 
     def setE(self, E):
@@ -32,11 +34,13 @@ class DnDpPin(DalitzPhsp):
             print('  t1:  {:.3f}'.format(self.t1))
             print('  t2:  {:.3f}'.format(self.t2))
 
-    def wint(self, a1, a2):
-        return MagSq(a1-a2)
+    def wint(self, a1, a2, a3):
+        """ """
+        return MagSq(a1+a2+a3)
 
-    def woint(self, a1, a2):
-        return MagSq(a1)+MagSq(a2)
+    def woint(self, a1, a2, a3):
+        """ """
+        return MagSq(a1)+MagSq(a2)+MagSq(a3)
 
     def ampl1(self, mdppi):
         """ D0 D*+ amplitude """
@@ -46,8 +50,14 @@ class DnDpPin(DalitzPhsp):
         """ D+ D*0 amplitude"""
         return self.t2 * self.bwdstn(mdnpi)
 
+    def pwave(self, mdd, mdppi):
+        """ (D0D+) P-wave amplitude """
+        return -self.dbl_pBpC_AB(mdd, mdppi) * np.exp(-self.alpha * mdd)
+
     def calc(self, mdd, mdnpi):
-        return self.KineC(mdd) * self.pdf(self.a1(self.mZsq(mdd, mdnpi)), self.a2(mdnpi))
+        mdppi = self.mZsq(mdd, mdnpi)
+        return self.KineC(mdd) * self.pdf(
+            self.a1(mdppi), self.a2(mdnpi), norm_pwave*self.a3(mdd, mdppi))
 
     def __call__(self, mdd, mdnpi):
         mask = self.inPhspABAC(mdd, mdnpi)
@@ -169,11 +179,11 @@ def main():
     import sys
     E = float(sys.argv[1]) * 10**-3
 
-    pdf = DnDpPin(gs, gt, E)
-    fig, axs = plt.subplots(2, 4, figsize=(16,8))
+    pdf = DnDpPin(gs, gt, E, channels=[False, False, True])
+    _, axs = plt.subplots(2, 4, figsize=(16,8))
 
-    dpi_dpi_plot(axs[0,0], pdf)
-    dd_dpi_plot(axs[1,0], pdf)
+    dpi_dpi_plot(axs[0,0], pdf, logplot=False)
+    dd_dpi_plot(axs[1,0], pdf, logplot=False)
     dd_plot(axs[0,1], pdf, False)
     dd_plot(axs[1,1], pdf, True)
     dnpi_plot(axs[0,2], pdf, False)
