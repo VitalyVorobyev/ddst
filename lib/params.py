@@ -51,7 +51,7 @@ include_dstpdn = True
 # 
 include_dd_pwave = False
 alpha_pwave = 0.
-norm_pwave = 1.
+norm_pwave = 0.6*10**8
 #######################
 
 datapath = '/home/vitaly/work/lhcb/DDpi'
