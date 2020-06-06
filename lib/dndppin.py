@@ -36,7 +36,8 @@ class DnDpPin(DalitzPhsp):
 
     def wint(self, a1, a2, a3):
         """ """
-        return MagSq(a1+a2+a3)
+        # return MagSq(a1+a2) + MagSq(a3)
+        return MagSq(a1+a2-1j*a3)
 
     def woint(self, a1, a2, a3):
         """ """
@@ -179,11 +180,13 @@ def main():
     import sys
     E = float(sys.argv[1]) * 10**-3
 
-    pdf = DnDpPin(gs, gt, E, channels=[False, False, True])
+    # pdf = DnDpPin(gs, gt, E, channels=[False, False, True])
+    pdf = DnDpPin(gs, gt, E, channels=[True, True, True])
     _, axs = plt.subplots(2, 4, figsize=(16,8))
 
-    dpi_dpi_plot(axs[0,0], pdf, logplot=False)
-    dd_dpi_plot(axs[1,0], pdf, logplot=False)
+    logplot = False
+    dpi_dpi_plot(axs[0,0], pdf, logplot=logplot)
+    dd_dpi_plot(axs[1,0], pdf, logplot=logplot)
     dd_plot(axs[0,1], pdf, False)
     dd_plot(axs[1,1], pdf, True)
     dnpi_plot(axs[0,2], pdf, False)
