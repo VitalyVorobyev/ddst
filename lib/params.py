@@ -33,8 +33,11 @@ br_dstn_dngam = 0.353  # D*0 -> D0 gamma
 # gs = (60 + 2.3j) * 10**-3
 # gt = (10000 + 2.3j) * 10**-3
 
-gs = (28 +4j) * 10**-3
-gt = (18 +4j) * 10**-3
+# gs = (23 +3j) * 10**-3
+# gt = (13 +3j) * 10**-3
+
+gs = (43 +1.5j) * 10**-3
+gt = (25000 +1.5j) * 10**-3
 
 DalitzNBins = 1000
 GammaScale = 0.032 / 7
@@ -52,7 +55,7 @@ include_dstpdn = True
 include_dd_pwave = False
 alpha_pwave = 0.
 # norm_pwave = 1.0*10**8
-norm_pwave = 1.2*10**8
+norm_pwave = 0.43*10**8
 #######################
 
 datapath = '/home/vitaly/work/lhcb/DDpi'

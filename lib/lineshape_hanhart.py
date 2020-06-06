@@ -1,8 +1,6 @@
 """ [Hanhart, arXiv:1602.00940] """
 
-import numpy as onp
 import numpy as np
-# import jax.numpy as np
 from params import *
 
 def rmass(m1, m2):
@@ -53,37 +51,23 @@ class TMtx(object):
             [self.t12(),   self.t11(k1)]
         ]) / self.det(k1,k2)
 
-    def summary(self):
-        print('t pole {0.real:.3f} + {0.imag:.3f}'.format(self.pole(self.gt, gamma_star_p)))
-        print('s pole {0.real:.3f} + {0.imag:.3f}'.format(self.pole(self.gs, gamma_star_z)))
-        print('Thr lo {:.3f}'.format(TMtx.d[0]))
-        print('Thr hi {:.3f}'.format(TMtx.d[1]))
-
-    def pole(self, g, w):
-        """ Complex energy: -Ex -0.5j*Gammax. The pole position """
-        return -(self.Ex(g) + 0.5j*self.Gx(g,w)) / unit
-
-    def Ex(self, g):
-        """ Real part of pole position - the binding energy """
-        return 0.5 * (g.real**2 - g.imag**2) / TMtx.mu
-
-    def Gx(self, g, width):
-        """ Imag part of pole position - the binding width """
-        return width + 2.*g.real*g.imag / TMtx.mu
-
 def main():
     """ Unit test """
-    print('Lowest threshold {:.3f} MeV'.format(TMtx.thr*10**3))
+    print('Lower threshold {:.3f} MeV'.format(TMtx.thr*10**3))
     print(' delta Threshold {:.3f} MeV'.format((TMtx.d[1] - TMtx.d[0])*10**3))
 
-    gs = (30 + 1.j) * 10**-3
-    gt = (30 + 1.j) * 10**-3
     t = TMtx(gs, gt)
-
-    E = (-2. + 10.*np.random.rand(100))*10**-3
-    dE = TMtx.d[1] - TMtx.d[0]
-    assert np.allclose(t.t12(), np.zeros(E.shape))
-    assert np.allclose(t.t11(t.k(E, 0)), t.t11(t.k(E+dE, 1)))
+    E = -0.225*10**-3
+    k1 = t.k(E, 0)
+    k2 = t.k(E, 1)
+    print(f'k1 {k1*10**3}')
+    print(f'k2 {k2*10**3}')
+    print(f'det {t.det(k1, k2)*10**6}')
+    print(f't11 {t.t11(k2)*10**3}')
+    print(f't22 {t.t11(k1)*10**3}')
+    print(f't12 {t.t12()*10**3}')
+    print(f'2mu {t.mu*2}')
+    print(MagSq((t.t11(k2) + t.t12()) / t.det(k1, k2)) * 10**-6)
 
 if __name__ == '__main__':
     main()

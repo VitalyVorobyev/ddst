@@ -18,6 +18,8 @@ from dndpgam import DnDpGam
 from resolution import smear_tdd, smear_e, smear_mdpi
 from params import *
 
+plot_pwave = True
+
 def merge(x1, y1, x2, y2, bins=5000):
     newx = np.linspace(min(x1[0], x2[0]), max(x1[-1], x2[-1]), bins)
 
@@ -46,14 +48,14 @@ def run(elo=-2, ehi=8, peak=[-0.0004, 0.0000]):
     nEbins  = 512
     nABbins = 512
     nACbins = 256
-    nBCbins = 512
+    nBCbins = 256
 
     E = np.linspace(elo, ehi, nEbins)*10**-3
     pdf = [
         DnDnPip(gs, gt, E[-1]),
         DnDpPin(gs, gt, E[-1], [True, True, False]),
         DnDpGam(gs, gt, E[-1]),
-        DnDpPin(gs, gt, E[-1], [True, True, False]),  # P-wave amplitude
+        DnDpPin(gs, gt, E[-1], [True, True, plot_pwave]),  # P-wave amplitude
         DnDpPin(gs, gt, E[-1], [False, False, True])  # P-wave amplitude
     ]
 
@@ -134,7 +136,8 @@ def run(elo=-2, ehi=8, peak=[-0.0004, 0.0000]):
     cax.plot(E, I['DDpi']  / ymax, label=r'$D^0D^0\pi^+$')
     cax.plot(E, I['DDpi0'] / ymax, label=r'$D^0D^+\pi^0$')
     cax.plot(E, I['DDgam'] / ymax, label=r'$D^0D^+\gamma$')
-    # cax.plot(E, I['Pwave'] / ymax, label=r'$D^0D^+$ $P$-wave')
+    if plot_pwave:
+        cax.plot(E, I['Pwave'] / ymax, label=r'$D^0D^+$ $P$-wave')
     cax.legend(loc='best', fontsize=16)
 
     # Energy w/ smearing
@@ -146,7 +149,8 @@ def run(elo=-2, ehi=8, peak=[-0.0004, 0.0000]):
     cax.plot(E, I['DDpiS']  / ymax, label=r'$D^0D^0\pi^+$')
     cax.plot(E, I['DDpi0S'] / ymax, label=r'$D^0D^+\pi^0$')
     cax.plot(E, I['DDgamS'] / ymax, label=r'$D^0D^+\gamma$')
-    # cax.plot(E, I['PwaveS'] / ymax, label=r'$D^0D^+$ $P$-wave')
+    if plot_pwave:
+        cax.plot(E, I['PwaveS'] / ymax, label=r'$D^0D^+$ $P$-wave')
     cax.legend(loc='best', fontsize=16)
 
     # m(DD) w/o smearing
@@ -165,7 +169,8 @@ def run(elo=-2, ehi=8, peak=[-0.0004, 0.0000]):
     cax.plot(tddspace[0], pdndn   / ymax,        label=r'$D^0D^0$')
     cax.plot(tddspace[1], pdndppi / ymax, ':',   label=r'$D^0D^+(\pi^0)$')
     cax.plot(tddspace[2], pdndpga / ymax, '--' , label=r'$D^0D^+(\gamma)$')
-    # cax.plot(tddspace[3], pdndppw / ymax, '--' , label=r'$D^0D^+$ $P$-wave')
+    if plot_pwave:
+        cax.plot(tddspace[3], pdndppw / ymax, '--' , label=r'$D^0D^+$ $P$-wave')
     cax.plot(x, y / ymax, label=r'$D^0D^+ total$')
 
     cax.grid()
@@ -188,7 +193,8 @@ def run(elo=-2, ehi=8, peak=[-0.0004, 0.0000]):
     cax.plot(dndns[0]*10**3, dndns[1]/ymax,              label=r'$D^0D^0$')
     cax.plot(pdndppis[0]*10**3, pdndppis[1]/ymax, ':',   label=r'$D^0D^+(\pi^0)$')
     cax.plot(pdndpgas[0]*10**3, pdndpgas[1]/ymax, '--' , label=r'$D^0D^+(\gamma)$')
-    # cax.plot(pdndppws[0]*10**3, pdndppws[1]/ymax, '--' , label=r'$D^0D^+$ $P$-wave')
+    if plot_pwave:
+        cax.plot(pdndppws[0]*10**3, pdndppws[1]/ymax, '--' , label=r'$D^0D^+$ $P$-wave')
     cax.plot(x*10**3, y/ymax, label=r'$D^0D^+ total$')
 
     cax.grid()
@@ -199,11 +205,13 @@ def run(elo=-2, ehi=8, peak=[-0.0004, 0.0000]):
     pdnpi = I['D0pi'] * 2 * np.sqrt(acspace[0])
     pdnpiPeak = I['D0piPeak'] * 2 * np.sqrt(acspace[0])
     x = np.sqrt(acspace[0])
-    ymax = max(np.max(pdnpi), np.max(pdnpiPeak))
+    ytotal = pdnpi + pdnpiPeak
+    ymax = max(ytotal)
     # cax.set(xlabel=r'$m(D^0\pi^+)$ (GeV)', ylim=(0, 1.01), xlim=(x[0], x[-1]))
     cax.set(xlabel=r'$m(D^0\pi^+)$ (GeV)', ylim=(0, 1.01), xlim=(x[0], 2.02))
-    cax.plot(x, pdnpi     / ymax, label=r'$D^0\pi^+$ high, $E>0$')
-    cax.plot(x, pdnpiPeak / ymax, label=r'$D^0\pi^+$ high, $E<0$')
+    cax.plot(x, ytotal    / ymax,       label=r'$D^0\pi^+$ high')
+    cax.plot(x, pdnpiPeak / ymax, ':',  label=r'$D^0\pi^+$ high, $E<0$')
+    cax.plot(x, pdnpi     / ymax, '--', label=r'$D^0\pi^+$ high, $E>0$')
     cax.grid()
     cax.legend(loc='best', fontsize=16)
 
@@ -213,9 +221,11 @@ def run(elo=-2, ehi=8, peak=[-0.0004, 0.0000]):
     cax.set(xlabel=r'$m(D^0\pi^+)$ (GeV)', ylim=(0, 1.01), xlim=(x[0], 2.02))
     x0, y0 = smear_mdpi(x, pdnpi, 1024)
     xp, yp = smear_mdpi(x, pdnpiPeak, 1024)
-    ymax = max(np.max(y0), np.max(yp))
-    cax.plot(x0, y0 / ymax, label=r'$D^0\pi^+$ high, $E>0$')
-    cax.plot(xp, yp / ymax, label=r'$D^0\pi^+$ high, $E<0$')
+    ytotal = y0 + yp
+    ymax = max(ytotal)
+    cax.plot(x0, ytotal / ymax, label=r'$D^0\pi^+$ high')
+    cax.plot(x0,    y0  / ymax, label=r'$D^0\pi^+$ high, $E>0$')
+    cax.plot(xp,    yp  / ymax, label=r'$D^0\pi^+$ high, $E<0$')
     cax.grid()
     cax.legend(loc='best', fontsize=16)
 

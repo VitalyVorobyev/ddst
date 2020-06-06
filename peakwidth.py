@@ -37,7 +37,7 @@ def run(elo=-0.5, ehi=0.0):
         r2 = 0
 
     plt.figure(figsize=(8, 6))
-    plt.title(f'gs {gs.real*10**3:.1f} + i{gs.imag*10**3:.1f} MeV, gs {gt.real*10**3:.1f} + i{gt.imag*10**3:.1f} MeV, fwhw = {0.5*(r2-r1)*10**3:.3f} keV')
+    plt.title(f'gs {gs.real*10**3:.1f} + i{gs.imag*10**3:.1f} MeV, gs {gt.real*10**3:.1f} + i{gt.imag*10**3:.1f} MeV, fwhw = {(r2-r1)*10**3:.3f} keV')
     plt.xlabel(r'$E$ (MeV)', fontsize=16)
     plt.ylim=(0, 1.01)
     plt.xlim=(E[0], E[-1])
