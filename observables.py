@@ -18,7 +18,7 @@ from dndpgam import DnDpGam
 from resolution import smear_tdd, smear_e, smear_mdpi
 from params import *
 
-include_pwave = False
+include_pwave = True
 
 def merge(x1, y1, x2, y2, bins=5000):
     newx = np.linspace(min(x1[0], x2[0]), max(x1[-1], x2[-1]), bins)
@@ -112,11 +112,14 @@ def run(elo=-2, ehi=8):
         else:
             I['D0piBelow'] += dbc[0] * np.sum(densACBC, axis=0)
         
-        I['DDpiS']  += smear_e(energy, E, tddspace[0], mab[0])[0]
+        # dI, eres = smear_e(energy, E, tddspace[0], mab[0])
+        I['DDpiS'] += smear_e(energy, E, tddspace[0], mab[0])[0]
         I['DDpi0S'] += smear_e(energy, E, tddspace[1], mab[1])[0]
         I['DDgamS'] += smear_e(energy, E, tddspace[2], mab[2])[0]
         if include_pwave:
             I['PwaveS'] += smear_e(energy, E, tddspace[3], mab[3])[0]
+        # print(f'sigma(E): {eres}')
+    print(I['DDpiS'] / np.max(I['DDpiS']))
 
     _, ax = plt.subplots(2, 3, figsize=(18,12))
     E *= 10**3

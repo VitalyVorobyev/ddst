@@ -13,16 +13,20 @@ mdp   = mdn + dmdp  # 1.86965
 mdstn = mdn + dmdstn
 mdstp = mdn + dmdstp
 
-isospin_breaking = 1
-mdp   = mdn   + isospin_breaking * (mdp   - mdn)
-mdstp = mdstn + isospin_breaking * (mdstp - mdstn)
-mpip  = mpin  + isospin_breaking * (mpip  - mpip)
-gamma_star_p = gamma_star_n + isospin_breaking * (gamma_star_p - gamma_star_n)
+# isospin_breaking = 1
+# mdp   = mdn   + isospin_breaking * (mdp   - mdn)
+# mdstp = mdstn + isospin_breaking * (mdstp - mdstn)
+# mpip  = mpin  + isospin_breaking * (mpip  - mpin)
+# gamma_star_p = gamma_star_n + isospin_breaking * (gamma_star_p - gamma_star_n)
 
-br_dstp_dppin = 0.307  # D*+ -> D+ pi0
-br_dstp_dnpip = 0.677  # D*+ -> D0 pi+
-br_dstn_dnpin = 0.647  # D*0 -> D0 pi0
-br_dstn_dngam = 0.353  # D*0 -> D0 gamma
+# br_dstp_dppin = 0.307  # D*+ -> D+ pi0
+# br_dstp_dnpip = 0.677  # D*+ -> D0 pi+
+# br_dstn_dnpin = 0.647  # D*0 -> D0 pi0
+# br_dstn_dngam = 0.353  # D*0 -> D0 gamma
+
+# Resolution parameters
+sigma_mdn = 8.20 * 10**-3  # m(D0) LHCb resolution
+sigma_ppi = 1.17 * 10**-3  # m(D*+) LHCb resolution
 
 # gs = ( 30 + 1.j) * 10**-3
 # gt = (-30 + 1.j) * 10**-3
@@ -46,8 +50,8 @@ br_dstn_dngam = 0.353  # D*0 -> D0 gamma
 # gs = (23 +3j) * 10**-3
 # gt = (13 +3j) * 10**-3
 
-gs = (   43 + 1.5j) * 10**-3
-gt = (25000 + 1.5j) * 10**-3
+gs = (   43 + 1.5e-4j) * 10**-3
+gt = (25000 + 1.5e-4j) * 10**-3
 
 DalitzNBins = 1000
 GammaScale = 0.032 / 7
@@ -55,16 +59,11 @@ GammaScale = 0.032 / 7
 #######################
 ##  D0D+pi0  options ##
 #######################
-# Turn on interference between D*0D+ and D*+D0 in the D0D+pi0 channel
-interf_dndstp_dpdstn = True
-# if False the [D*0 -> D0 pi0]D+ amplitude is excluded
-include_dstndp = True
-# if False the [D*+ -> D+ pi0]D0 amplitude is excluded
-include_dstpdn = True
-# 
-include_dd_pwave = False
+interf_dndstp_dpdstn = True  # Turn on interference between D*0D+ and D*+D0 in the D0D+pi0 channel
+include_dstndp = True  # if False the [D*0 -> D0 pi0]D+ amplitude is excluded
+include_dstpdn = True  # if False the [D*+ -> D+ pi0]D0 amplitude is excluded
+include_dd_pwave = True
 alpha_pwave = 0.
-# norm_pwave = 1.0*10**8
 norm_pwave = 0.43*10**8
 g1 = 1.
 g2 = 1.

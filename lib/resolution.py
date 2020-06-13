@@ -8,23 +8,26 @@ import matplotlib.pyplot as plt
 
 from params import *
 
-smdstp = 0.36 * 10**-3
-smd = 8.2 * 10**-3
-smdstpSq = smdstp**2
-smdSq = smd**2
+sppiSq = sigma_ppi**2
+smdSq = sigma_mdn**2
 
 def spline(x, y, newx):
     """ Cubic spline """
     return interp1d(x, y, kind='cubic')(newx).reshape(1, -1)
 
+def smdstp(tpi=6.6e-3):
+    """ sigma(D*+) """
+    return np.sqrt(2*tpi/mpip)*sigma_ppi
+
 C1 = (2*mdn) / (2*mdn+mpip)
-def smddpi(tdd):
+def smddpi(e, tdd):
     """ sigma(m_DDpi) """
-    return C1 * np.sqrt(2*tdd/mdn * smdSq + smdstpSq)
+    tpi = e - mdn + mdstp - mpip
+    return C1 * np.sqrt(0.5*tdd/mdn * smdSq + 2*tpi/mpip*sppiSq)
 
 def stdd(tdd):
     """ sigma(m_DD) """
-    return np.sqrt(2*tdd/mdn)*smd
+    return np.sqrt(2*tdd/mdn)*sigma_mdn
 
 def smear_tdd(tdd, p, dots=250):
     """ """
@@ -42,7 +45,7 @@ def smear_mdpi(mdpi, p, dots=250):
     mdpi = np.append(mdpi, appx)
     p = np.append(p, np.zeros(appx.shape))
     xr, yr = np.meshgrid(newx, newx)
-    r = norm.pdf(xr, yr, smdstp)
+    r = norm.pdf(xr, yr, smdstp())
     r /= np.sum(r, axis=0)
     return (newx, np.sum(spline(mdpi, p, newx) @ r, axis=0))
 
@@ -55,10 +58,10 @@ def smear_e(e, ev, tdd, ptdd, dots=250):
     newtdd = np.linspace(tdd[0], tdd[-1], dots)
     newptdd = spline(tdd, ptdd, newtdd).flatten()
     er, tddr = np.meshgrid(ev, newtdd)
-    r = norm.pdf(er, e, smddpi(tddr))
+    r = norm.pdf(er, e, smddpi(e, tddr))
     r /= np.sum(r, axis=0)
     return (np.sum(newptdd.reshape(1,-1) @ r, axis=0),
-            np.average(smddpi(newtdd.T), weights=newptdd))
+            np.average(smddpi(e, newtdd.T), weights=newptdd))
 
 def main():
     """ Unit test """
@@ -76,8 +79,9 @@ def main():
     plt.show()
 
 if __name__ == '__main__':
-    tdd = np.linspace(0, 8, 25)[1:]*10**-3
-    print(smddpi(tdd)*10**3)
+    pass
+    # tdd = np.linspace(0, 8, 25)[1:]*10**-3
+    # print(smddpi(tdd)*10**3)
     # for x in range(6):
     #     x = (x+1)*10**-3
     #     print(x*10**3, stdd(x)*10**3)
