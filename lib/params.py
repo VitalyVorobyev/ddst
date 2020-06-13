@@ -1,13 +1,23 @@
 """ """
+import numpy as np
 
-mdn   = 1.86484
-mdp   = mdn + 0.004822  # 1.86965
-mdstn = mdn + 0.142014
-mdstp = mdn + 0.1454257
-mpin  = 0.1349766
-mpip  = 0.13957018
+mdn    = 1.86484
+dmdp   = 0.004822
+dmdstn = 0.142014
+dmdstp = 0.1454257
+mpin   = 0.1349766
+mpip   = 0.13957018
 gamma_star_n = 65.5e-6
 gamma_star_p = 85.5e-6
+mdp   = mdn + dmdp  # 1.86965
+mdstn = mdn + dmdstn
+mdstp = mdn + dmdstp
+
+isospin_breaking = 1
+mdp   = mdn   + isospin_breaking * (mdp   - mdn)
+mdstp = mdstn + isospin_breaking * (mdstp - mdstn)
+mpip  = mpin  + isospin_breaking * (mpip  - mpip)
+gamma_star_p = gamma_star_n + isospin_breaking * (gamma_star_p - gamma_star_n)
 
 br_dstp_dppin = 0.307  # D*+ -> D+ pi0
 br_dstp_dnpip = 0.677  # D*+ -> D0 pi+
@@ -36,8 +46,8 @@ br_dstn_dngam = 0.353  # D*0 -> D0 gamma
 # gs = (23 +3j) * 10**-3
 # gt = (13 +3j) * 10**-3
 
-gs = (43 +1.5j) * 10**-3
-gt = (25000 +1.5j) * 10**-3
+gs = (   43 + 1.5j) * 10**-3
+gt = (25000 + 1.5j) * 10**-3
 
 DalitzNBins = 1000
 GammaScale = 0.032 / 7
@@ -56,6 +66,10 @@ include_dd_pwave = False
 alpha_pwave = 0.
 # norm_pwave = 1.0*10**8
 norm_pwave = 0.43*10**8
+g1 = 1.
+g2 = 1.
+Rin = 1e-3
+phiin = np.pi
 #######################
 
 datapath = '/home/vitaly/work/lhcb/DDpi'

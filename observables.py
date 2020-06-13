@@ -18,7 +18,7 @@ from dndpgam import DnDpGam
 from resolution import smear_tdd, smear_e, smear_mdpi
 from params import *
 
-plot_pwave = True
+include_pwave = False
 
 def merge(x1, y1, x2, y2, bins=5000):
     newx = np.linspace(min(x1[0], x2[0]), max(x1[-1], x2[-1]), bins)
@@ -43,7 +43,7 @@ def merge(x1, y1, x2, y2, bins=5000):
     y2new = interp1d(x2, y2, kind='cubic')(newx)
     return (newx, y1new+y2new)
 
-def run(elo=-2, ehi=8, peak=[-0.0004, 0.0000]):
+def run(elo=-2, ehi=8):
     """ """
     nEbins  = 512
     nABbins = 512
@@ -53,43 +53,40 @@ def run(elo=-2, ehi=8, peak=[-0.0004, 0.0000]):
     E = np.linspace(elo, ehi, nEbins)*10**-3
     pdf = [
         DnDnPip(gs, gt, E[-1]),
-        DnDpPin(gs, gt, E[-1], [True, True, False]),
+        DnDpPin(gs, gt, E[-1], [True, True, include_pwave]),
         DnDpGam(gs, gt, E[-1]),
-        DnDpPin(gs, gt, E[-1], [True, True, plot_pwave]),  # P-wave amplitude
         DnDpPin(gs, gt, E[-1], [False, False, True])  # P-wave amplitude
     ]
 
     I = {
-        'Pwave'   : np.zeros(nEbins),
-        'DDpi'    : np.zeros(nEbins),
-        'DDpi0'   : np.zeros(nEbins),
-        'DDgam'   : np.zeros(nEbins),
-        'DDpiS'   : np.zeros(nEbins),
-        'DDpi0S'  : np.zeros(nEbins),
-        'DDgamS'  : np.zeros(nEbins),
-        'PwaveS'  : np.zeros(nEbins),
-        'D0D+Pw'  : np.zeros(nABbins),
-        'D0D+pi'  : np.zeros(nABbins),
-        'D0D+ga'  : np.zeros(nABbins),
-        'D0D0'    : np.zeros(nABbins),
-        'D0pi'    : np.zeros(nACbins),
-        'D0piPeak': np.zeros(nACbins),
+        'Pwave'     : np.zeros(nEbins),
+        'DDpi'      : np.zeros(nEbins),
+        'DDpi0'     : np.zeros(nEbins),
+        'DDgam'     : np.zeros(nEbins),
+        'DDpiS'     : np.zeros(nEbins),
+        'DDpi0S'    : np.zeros(nEbins),
+        'DDgamS'    : np.zeros(nEbins),
+        'PwaveS'    : np.zeros(nEbins),
+        'D0D+Pw'    : np.zeros(nABbins),
+        'D0D+pi'    : np.zeros(nABbins),
+        'D0D+ga'    : np.zeros(nABbins),
+        'D0D0'      : np.zeros(nABbins),
+        'D0piBelow' : np.zeros(nACbins),
+        'D0piAbove' : np.zeros(nACbins),
     }
 
-    gridsABAC   = [p.mgridABAC(nABbins, nACbins)[0] for p in pdf]
-    gridsACBC   = [p.mgridACBC(nACbins, nBCbins)[0] for p in pdf]
+    gridsABAC = [p.mgridABAC(nABbins, nACbins)[0] for p in pdf]
+    gridsACBC = [p.mgridACBC(nACbins, nBCbins)[0] for p in pdf]
     abspace = [p.linspaceAB(nABbins) for p in pdf]
     acspace = [p.linspaceAC(nACbins) for p in pdf]
     bcspace = [p.linspaceBC(nBCbins) for p in pdf]
-    thrs = [mdn+mdn, mdn+mdp, mdn+mdp, mdn+mdp, mdn+mdp]
+    thrs = [mdn+mdn, mdn+mdp, mdn+mdp, mdn+mdp]
     tddspace = [np.sqrt(x) - thr for x, thr in zip(abspace, thrs)]
     dab = [x[1] - x[0] for x in abspace]
     dac = [x[1] - x[0] for x in acspace]
     dbc = [x[1] - x[0] for x in bcspace]
 
     ddpi_mask = (gridsACBC[0][1] > gridsACBC[0][0])
-    print(np.sum(ddpi_mask))
-    print(ddpi_mask.shape[0]*ddpi_mask.shape[1])
 
     for idx, energy in enumerate(E):
         print('E {:.3f} MeV'.format(energy*10**3))
@@ -97,30 +94,29 @@ def run(elo=-2, ehi=8, peak=[-0.0004, 0.0000]):
             p.setE(energy)
         dens = [p(*g)[0] for p, g in zip(pdf, gridsABAC)]
         mab = [dx * np.sum(x, axis=0) for x, dx in zip(dens, dac)]
-        I['DDpi'][idx] = np.sum(mab[0]) * dab[0]
+        I['DDpi'][idx]  = np.sum(mab[0]) * dab[0]
+        I['DDpi0'][idx] = np.sum(mab[1]) * dab[1]
         I['DDgam'][idx] = np.sum(mab[2]) * dab[2]
-        I['D0D0'] += mab[0]
+        if include_pwave:
+            I['Pwave'][idx] = np.sum(mab[3]) * dab[3]
+
+        I['D0D0']   += mab[0]
+        I['D0D+pi'] += mab[1]
         I['D0D+ga'] += mab[2]
+        I['D0D+Pw'] += mab[3]
 
         densACBC = pdf[0](pdf[0].mZsq(*gridsACBC[0]), gridsACBC[0][1])[0]
         densACBC[ddpi_mask] = 0
         if energy > 0:
-            I['D0pi'] += dbc[0] * np.sum(densACBC, axis=0)
+            I['D0piAbove'] += dbc[0] * np.sum(densACBC, axis=0)
         else:
-            I['D0piPeak'] += dbc[0] * np.sum(densACBC, axis=0)
-        if (energy > peak[0]) and (energy < peak[1]):
-            I['Pwave'][idx] = np.sum(mab[4]) * dab[4]
-            I['D0D+Pw'] += mab[4]
-            I['PwaveS'] += smear_e(energy, E, tddspace[4], mab[4])[0]
-            I['DDpi0'][idx] = np.sum(mab[3]) * dab[3]
-            I['D0D+pi'] += mab[3]
-            I['DDpi0S'] += smear_e(energy, E, tddspace[3], mab[3])[0]
-        else:
-            I['DDpi0'][idx] = np.sum(mab[1]) * dab[1]
-            I['D0D+pi'] += mab[1]
-            I['DDpi0S'] += smear_e(energy, E, tddspace[1], mab[1])[0]
+            I['D0piBelow'] += dbc[0] * np.sum(densACBC, axis=0)
+        
         I['DDpiS']  += smear_e(energy, E, tddspace[0], mab[0])[0]
+        I['DDpi0S'] += smear_e(energy, E, tddspace[1], mab[1])[0]
         I['DDgamS'] += smear_e(energy, E, tddspace[2], mab[2])[0]
+        if include_pwave:
+            I['PwaveS'] += smear_e(energy, E, tddspace[3], mab[3])[0]
 
     _, ax = plt.subplots(2, 3, figsize=(18,12))
     E *= 10**3
@@ -136,7 +132,7 @@ def run(elo=-2, ehi=8, peak=[-0.0004, 0.0000]):
     cax.plot(E, I['DDpi']  / ymax, label=r'$D^0D^0\pi^+$')
     cax.plot(E, I['DDpi0'] / ymax, label=r'$D^0D^+\pi^0$')
     cax.plot(E, I['DDgam'] / ymax, label=r'$D^0D^+\gamma$')
-    if plot_pwave:
+    if include_pwave:
         cax.plot(E, I['Pwave'] / ymax, label=r'$D^0D^+$ $P$-wave')
     cax.legend(loc='best', fontsize=16)
 
@@ -149,7 +145,7 @@ def run(elo=-2, ehi=8, peak=[-0.0004, 0.0000]):
     cax.plot(E, I['DDpiS']  / ymax, label=r'$D^0D^0\pi^+$')
     cax.plot(E, I['DDpi0S'] / ymax, label=r'$D^0D^+\pi^0$')
     cax.plot(E, I['DDgamS'] / ymax, label=r'$D^0D^+\gamma$')
-    if plot_pwave:
+    if include_pwave:
         cax.plot(E, I['PwaveS'] / ymax, label=r'$D^0D^+$ $P$-wave')
     cax.legend(loc='best', fontsize=16)
 
@@ -169,7 +165,7 @@ def run(elo=-2, ehi=8, peak=[-0.0004, 0.0000]):
     cax.plot(tddspace[0], pdndn   / ymax,        label=r'$D^0D^0$')
     cax.plot(tddspace[1], pdndppi / ymax, ':',   label=r'$D^0D^+(\pi^0)$')
     cax.plot(tddspace[2], pdndpga / ymax, '--' , label=r'$D^0D^+(\gamma)$')
-    if plot_pwave:
+    if include_pwave:
         cax.plot(tddspace[3], pdndppw / ymax, '--' , label=r'$D^0D^+$ $P$-wave')
     cax.plot(x, y / ymax, label=r'$D^0D^+ total$')
 
@@ -193,7 +189,7 @@ def run(elo=-2, ehi=8, peak=[-0.0004, 0.0000]):
     cax.plot(dndns[0]*10**3, dndns[1]/ymax,              label=r'$D^0D^0$')
     cax.plot(pdndppis[0]*10**3, pdndppis[1]/ymax, ':',   label=r'$D^0D^+(\pi^0)$')
     cax.plot(pdndpgas[0]*10**3, pdndpgas[1]/ymax, '--' , label=r'$D^0D^+(\gamma)$')
-    if plot_pwave:
+    if include_pwave:
         cax.plot(pdndppws[0]*10**3, pdndppws[1]/ymax, '--' , label=r'$D^0D^+$ $P$-wave')
     cax.plot(x*10**3, y/ymax, label=r'$D^0D^+ total$')
 
@@ -202,16 +198,16 @@ def run(elo=-2, ehi=8, peak=[-0.0004, 0.0000]):
 
     # m(Dpi) w/o smearing
     cax = ax[0,2]
-    pdnpi = I['D0pi'] * 2 * np.sqrt(acspace[0])
-    pdnpiPeak = I['D0piPeak'] * 2 * np.sqrt(acspace[0])
+    pdnpiAbove = I['D0piAbove'] * 2 * np.sqrt(acspace[0])
+    pdnpiBelow = I['D0piBelow'] * 2 * np.sqrt(acspace[0])
     x = np.sqrt(acspace[0])
-    ytotal = pdnpi + pdnpiPeak
+    ytotal = pdnpiAbove + pdnpiBelow
     ymax = max(ytotal)
     # cax.set(xlabel=r'$m(D^0\pi^+)$ (GeV)', ylim=(0, 1.01), xlim=(x[0], x[-1]))
     cax.set(xlabel=r'$m(D^0\pi^+)$ (GeV)', ylim=(0, 1.01), xlim=(x[0], 2.02))
-    cax.plot(x, ytotal    / ymax,       label=r'$D^0\pi^+$ high')
-    cax.plot(x, pdnpiPeak / ymax, ':',  label=r'$D^0\pi^+$ high, $E<0$')
-    cax.plot(x, pdnpi     / ymax, '--', label=r'$D^0\pi^+$ high, $E>0$')
+    cax.plot(x, ytotal     / ymax,       label=r'$D^0\pi^+$ high')
+    cax.plot(x, pdnpiAbove / ymax, '--', label=r'$D^0\pi^+$ high, $E>0$')
+    cax.plot(x, pdnpiBelow / ymax, ':',  label=r'$D^0\pi^+$ high, $E<0$')
     cax.grid()
     cax.legend(loc='best', fontsize=16)
 
@@ -219,13 +215,13 @@ def run(elo=-2, ehi=8, peak=[-0.0004, 0.0000]):
     cax = ax[1,2]
     # cax.set(xlabel=r'$m(D^0\pi^+)$ (GeV)', ylim=(0, 1.01), xlim=(x[0], x[-1]))
     cax.set(xlabel=r'$m(D^0\pi^+)$ (GeV)', ylim=(0, 1.01), xlim=(x[0], 2.02))
-    x0, y0 = smear_mdpi(x, pdnpi, 1024)
-    xp, yp = smear_mdpi(x, pdnpiPeak, 1024)
+    x0, y0 = smear_mdpi(x, pdnpiAbove, 1024)
+    xp, yp = smear_mdpi(x, pdnpiBelow, 1024)
     ytotal = y0 + yp
     ymax = max(ytotal)
-    cax.plot(x0, ytotal / ymax, label=r'$D^0\pi^+$ high')
-    cax.plot(x0,    y0  / ymax, label=r'$D^0\pi^+$ high, $E>0$')
-    cax.plot(xp,    yp  / ymax, label=r'$D^0\pi^+$ high, $E<0$')
+    cax.plot(x0, ytotal / ymax,       label=r'$D^0\pi^+$ high')
+    cax.plot(x0,    y0  / ymax, '--', label=r'$D^0\pi^+$ high, $E>0$')
+    cax.plot(xp,    yp  / ymax, ':',  label=r'$D^0\pi^+$ high, $E<0$')
     cax.grid()
     cax.legend(loc='best', fontsize=16)
 
@@ -237,4 +233,3 @@ def run(elo=-2, ehi=8, peak=[-0.0004, 0.0000]):
 if __name__ == '__main__':
     elo, ehi = [float(x) for x in sys.argv[1:]]
     run(elo, ehi)
-    

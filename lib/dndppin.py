@@ -18,15 +18,16 @@ class DnDpPin(DalitzPhsp):
         self.alpha = alpha_pwave
         self.bwdstp = lambda s: RelativisticBreitWigner(s, mdstp, gamma_star_p)  # * np.sqrt(br_dstp_dppin)
         self.bwdstn = lambda s: RelativisticBreitWigner(s, mdstn, gamma_star_n)  # * np.sqrt(br_dstn_dnpin)
-        self.a1 = self.ampl1 if channels[0] else lambda x: 0
-        self.a2 = self.ampl2 if channels[1] else lambda x: 0
-        self.a3 = self.pwave if channels[2] else lambda x,y: 0
-        self.pdf = self.wint if interf else self.woint
+        self.a1 = self.ampl1     if channels[0] else lambda x: 0
+        self.a2 = self.ampl2     if channels[1] else lambda x: 0
+        self.a3 = self.inelastic if channels[2] else lambda x,y: 0
+        self.pdf = self.wint     if interf else self.woint
 
     def setE(self, E):
         tmtx = self.tmtx(E)
         self.t1 = np.sum(tmtx[0])  # D0 D*+
         self.t2 = np.sum(tmtx[1])  # D+ D*0
+        self.tin = Rin * (g1*self.t1 + g2*self.t2)
         self.setM(E + TMtx.thr)
         if VERB:
             print('##### DDPi: E {:.3f} MeV #####'.format(E*10**3))
@@ -36,8 +37,7 @@ class DnDpPin(DalitzPhsp):
 
     def wint(self, a1, a2, a3):
         """ """
-        # return MagSq(a1+a2) + MagSq(a3)
-        return MagSq(a1+a2-1j*a3)
+        return MagSq(a1+a2+a3)
 
     def woint(self, a1, a2, a3):
         """ """
@@ -50,6 +50,10 @@ class DnDpPin(DalitzPhsp):
     def ampl2(self, mdnpi):
         """ D+ D*0 amplitude"""
         return self.t2 * self.bwdstn(mdnpi)
+
+    def inelastic(self, mdd, mdppi):
+        """ inelastic channel from T-matrix """
+        return np.exp(1.j*phiin) * self.tin * self.dbl_pBpC_AB(mdd, mdppi)
 
     def pwave(self, mdd, mdppi):
         """ (D0D+) P-wave amplitude """
