@@ -45,7 +45,7 @@ def merge(x1, y1, x2, y2, bins=5000):
 
 def run(elo=-2, ehi=8):
     """ """
-    nEbins  = 512
+    nEbins  = 256
     nABbins = 512
     nACbins = 256
     nBCbins = 256
@@ -119,7 +119,7 @@ def run(elo=-2, ehi=8):
         if include_pwave:
             I['PwaveS'] += smear_e(energy, E, tddspace[3], mab[3])[0]
         # print(f'sigma(E): {eres}')
-    print(I['DDpiS'] / np.max(I['DDpiS']))
+    # print(I['DDpiS'] / np.max(I['DDpiS']))
 
     _, ax = plt.subplots(2, 3, figsize=(18,12))
     E *= 10**3

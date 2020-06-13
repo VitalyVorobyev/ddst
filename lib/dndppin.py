@@ -27,7 +27,7 @@ class DnDpPin(DalitzPhsp):
         tmtx = self.tmtx(E)
         self.t1 = np.sum(tmtx[0])  # D0 D*+
         self.t2 = np.sum(tmtx[1])  # D+ D*0
-        self.tin = Rin * (g1*self.t1 + g2*self.t2)
+        self.tin = Rin * (g1*self.t1 - g2*self.t2)
         self.setM(E + TMtx.thr)
         if VERB:
             print('##### DDPi: E {:.3f} MeV #####'.format(E*10**3))
@@ -53,11 +53,14 @@ class DnDpPin(DalitzPhsp):
 
     def inelastic(self, mdd, mdppi):
         """ inelastic channel from T-matrix """
-        return np.exp(1.j*phiin) * self.tin * self.dbl_pBpC_AB(mdd, mdppi)
+        return np.exp(1.j*phiin) * self.tin * (
+            self.dbl_pBpC_AB(mdd, mdppi) -
+            self.dbl_pBpC_AB(mdd, self.mZsq(mdd, mdppi))
+        )
 
     def pwave(self, mdd, mdppi):
         """ (D0D+) P-wave amplitude """
-        return -self.dbl_pBpC_AB(mdd, mdppi) * np.exp(-self.alpha * mdd)
+        return (self.dbl_pBpC_AB(mdd, mdppi) + self.dbl_pBpC_AB(mdd, self.mZsq(mdd, mdppi))) * np.exp(-self.alpha * mdd)
 
     def calc(self, mdd, mdnpi):
         mdppi = self.mZsq(mdd, mdnpi)
@@ -188,7 +191,7 @@ def main():
     pdf = DnDpPin(gs, gt, E, channels=[True, True, True])
     _, axs = plt.subplots(2, 4, figsize=(16,8))
 
-    logplot = False
+    logplot = True
     dpi_dpi_plot(axs[0,0], pdf, logplot=logplot)
     dd_dpi_plot(axs[1,0], pdf, logplot=logplot)
     dd_plot(axs[0,1], pdf, False)
