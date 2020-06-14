@@ -19,10 +19,10 @@ mdstp = mdstn + isospin_breaking * (mdstp - mdstn)
 mpip  = mpin  + isospin_breaking * (mpip  - mpin)
 gamma_star_p = gamma_star_n + isospin_breaking * (gamma_star_p - gamma_star_n)
 
-# br_dstp_dppin = 0.307  # D*+ -> D+ pi0
-# br_dstp_dnpip = 0.677  # D*+ -> D0 pi+
-# br_dstn_dnpin = 0.647  # D*0 -> D0 pi0
-# br_dstn_dngam = 0.353  # D*0 -> D0 gamma
+br_dstp_dppin = 0.307  # D*+ -> D+ pi0
+br_dstp_dnpip = 0.677  # D*+ -> D0 pi+
+br_dstn_dnpin = 0.647  # D*0 -> D0 pi0
+br_dstn_dngam = 0.353  # D*0 -> D0 gamma
 
 # Resolution parameters
 sigma_mdn = 8.20 * 10**-3  # m(D0) LHCb resolution
@@ -53,8 +53,8 @@ sigma_ppi = 1.17 * 10**-3  # m(D*+) LHCb resolution
 gs = (   43 + 1.5j) * 10**-3
 gt = (25000 + 1.5j) * 10**-3
 
-DalitzNBins = 1000
-GammaScale = 0.032 / 7
+DalitzNBins = 512
+GammaScale = 0.024
 
 #######################
 ##  D0D+pi0  options ##
@@ -64,7 +64,8 @@ include_dstndp = True  # if False the [D*0 -> D0 pi0]D+ amplitude is excluded
 include_dstpdn = True  # if False the [D*+ -> D+ pi0]D0 amplitude is excluded
 include_dd_pwave = True
 alpha_pwave = 0.
-norm_pwave = 0.95*10**10
+norm_pwave = 0.8*10**11
+pwave_over_dndnpip = 0.2
 g1 = 1.
 g2 = 1.
 Rin = 1e-3

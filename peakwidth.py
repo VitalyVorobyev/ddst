@@ -5,9 +5,13 @@ sys.path.append('./lib')
 
 import numpy as np
 from scipy.interpolate import UnivariateSpline
+import matplotlib
+matplotlib.rc('xtick', labelsize=16) 
+matplotlib.rc('ytick', labelsize=16)
 import matplotlib.pyplot as plt
 
 from dndnpip import DnDnPip
+from dndppin import DnDpPin
 from resolution import smear_tdd, smear_e, smear_mdpi
 from params import *
 
@@ -36,15 +40,20 @@ def run(elo=-0.5, ehi=0.0):
         r1 = r[0]
         r2 = 0
 
-    plt.figure(figsize=(8, 6))
-    plt.title(f'gs {gs.real*10**3:.1f} + i{gs.imag*10**3:.1f} MeV, gs {gt.real*10**3:.1f} + i{gt.imag*10**3:.1f} MeV, fwhw = {(r2-r1)*10**3:.3f} keV')
-    plt.xlabel(r'$E$ (MeV)', fontsize=16)
-    plt.ylim=(0, 1.01)
-    plt.xlim=(E[0], E[-1])
+    print(f'gs {gs.real*10**3:.1f} + i{gs.imag*10**3:.1f} MeV, gs {gt.real*10**3:.1f} + i{gt.imag*10**3:.1f} MeV, fwhw = {(r2-r1)*10**3:.3f} keV')
+    plt.figure(figsize=(8, 5))
     plt.plot(E, I / np.max(I))
     plt.axvspan(r1, r2, facecolor='orange', alpha=0.2)
+    plt.xlabel(r'$E$ (MeV)', fontsize=16)
+    plt.ylim(0, 1.01)
+    plt.xlim(E[0], E[-1])
+    plt.minorticks_on()
+    plt.axes().xaxis.grid(True, which='minor', linestyle='--')
     plt.grid()
     plt.tight_layout()
+
+    plt.savefig('plots/peak.png')
+    plt.savefig('plots/peak.pdf')
 
     plt.show()
 

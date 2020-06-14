@@ -79,7 +79,7 @@ def tdd(mdd):
     return mdd - 2.*mdn
 
 def dpi_dpi_plot(ax, pdf, logplot=True):
-    (md1pi, md2pi), _ = pdf.mgridACBC(500)
+    (md1pi, md2pi), _ = pdf.mgridACBC(512)
     mdd = pdf.mZsq(md1pi, md2pi)
     z, mask = pdf(mdd, md1pi)
     if logplot:
@@ -149,18 +149,27 @@ def main():
     E = float(sys.argv[1]) * 10**-3
 
     pdf = DnDnPip(gs, gt, E)
-    fig, axs = plt.subplots(2, 4, figsize=(16,8))
+    _, axs = plt.subplots(1, 4, figsize=(16,4))
 
-    dpi_dpi_plot(axs[0,0], pdf)
-    dd_dpi_plot(axs[1,0], pdf)
-    dd_plot(axs[0,1], pdf, False)
-    dd_plot(axs[1,1], pdf, True)
-    dpi_lo_plot(axs[0,2], pdf, False)
-    dpi_lo_plot(axs[1,2], pdf, True)
-    dpi_hi_plot(axs[0,3], pdf, False)
-    dpi_hi_plot(axs[1,3], pdf, True)
+    # dpi_dpi_plot(axs[0,0], pdf)
+    # dd_dpi_plot(axs[1,0], pdf)
+    # dd_plot(axs[0,1], pdf, False)
+    # dd_plot(axs[1,1], pdf, True)
+    # dpi_lo_plot(axs[0,2], pdf, False)
+    # dpi_lo_plot(axs[1,2], pdf, True)
+    # dpi_hi_plot(axs[0,3], pdf, False)
+    # dpi_hi_plot(axs[1,3], pdf, True)
+
+    dpi_dpi_plot(axs[0], pdf)
+    dd_plot(     axs[1], pdf, True)
+    dpi_lo_plot( axs[2], pdf, True)
+    dpi_hi_plot( axs[3], pdf, True)
 
     plt.tight_layout()
+
+    plt.savefig(f'plots/dp_dndnpip_{E*10**3:.1f}.png')
+    plt.savefig(f'plots/dp_dndnpip_{E*10**3:.1f}.pdf')
+
     plt.show()
 
 if __name__ == '__main__':

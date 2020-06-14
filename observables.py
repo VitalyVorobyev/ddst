@@ -18,7 +18,8 @@ from dndpgam import DnDpGam
 from resolution import smear_tdd, smear_e, smear_mdpi
 from params import *
 
-include_pwave = True
+include_pwave = False
+hide_invisible = False
 
 def merge(x1, y1, x2, y2, bins=5000):
     newx = np.linspace(min(x1[0], x2[0]), max(x1[-1], x2[-1]), bins)
@@ -45,10 +46,10 @@ def merge(x1, y1, x2, y2, bins=5000):
 
 def run(elo=-2, ehi=8):
     """ """
-    nEbins  = 256
+    nEbins  = 512
     nABbins = 512
     nACbins = 256
-    nBCbins = 256
+    nBCbins = 512
 
     E = np.linspace(elo, ehi, nEbins)*10**-3
     pdf = [
@@ -133,10 +134,11 @@ def run(elo=-2, ehi=8):
     cax.set(xlabel=r'$E$ (MeV)', ylim=(0, 1.01), xlim=(E[0], 5))
     cax.grid()
     cax.plot(E, I['DDpi']  / ymax, label=r'$D^0D^0\pi^+$')
-    cax.plot(E, I['DDpi0'] / ymax, label=r'$D^0D^+\pi^0$')
-    cax.plot(E, I['DDgam'] / ymax, label=r'$D^0D^+\gamma$')
-    if include_pwave:
-        cax.plot(E, I['Pwave'] / ymax, label=r'$D^0D^+$ $P$-wave')
+    if not hide_invisible:
+        cax.plot(E, I['DDpi0'] / ymax, label=r'$D^0D^+\pi^0$')
+        cax.plot(E, I['DDgam'] / ymax, label=r'$D^0D^+\gamma$')
+        if include_pwave:
+            cax.plot(E, I['Pwave'] / ymax, label=r'$D^0D^+$ $P$-wave')
     cax.legend(loc='best', fontsize=16)
 
     # Energy w/ smearing
@@ -146,10 +148,11 @@ def run(elo=-2, ehi=8):
     cax.set(xlabel=r'$E$ (MeV)', ylim=(0, 1.01), xlim=(E[0], 5))
     cax.grid()
     cax.plot(E, I['DDpiS']  / ymax, label=r'$D^0D^0\pi^+$')
-    cax.plot(E, I['DDpi0S'] / ymax, label=r'$D^0D^+\pi^0$')
-    cax.plot(E, I['DDgamS'] / ymax, label=r'$D^0D^+\gamma$')
-    if include_pwave:
-        cax.plot(E, I['PwaveS'] / ymax, label=r'$D^0D^+$ $P$-wave')
+    if not hide_invisible:
+        cax.plot(E, I['DDpi0S'] / ymax, label=r'$D^0D^+\pi^0$')
+        cax.plot(E, I['DDgamS'] / ymax, label=r'$D^0D^+\gamma$')
+        if include_pwave:
+            cax.plot(E, I['PwaveS'] / ymax, label=r'$D^0D^+$ $P$-wave')
     cax.legend(loc='best', fontsize=16)
 
     # m(DD) w/o smearing
@@ -229,8 +232,8 @@ def run(elo=-2, ehi=8):
     cax.legend(loc='best', fontsize=16)
 
     plt.tight_layout()
-    plt.savefig('obs.png')
-    plt.savefig('obs.pdf')
+    plt.savefig('plots/obs.png')
+    plt.savefig('plots/obs.pdf')
     plt.show()
 
 if __name__ == '__main__':
