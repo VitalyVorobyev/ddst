@@ -6,7 +6,7 @@ sys.path.append('./lib')
 import numpy as np
 from scipy.interpolate import UnivariateSpline
 import matplotlib
-matplotlib.rc('xtick', labelsize=16) 
+matplotlib.rc('xtick', labelsize=16)
 matplotlib.rc('ytick', labelsize=16)
 import matplotlib.pyplot as plt
 
