@@ -7,7 +7,7 @@ dmdstn = 0.142014
 dmdstp = 0.1454257
 mpin   = 0.1349766
 mpip   = 0.13957018
-gamma_star_n = 65.5e-6
+gamma_star_n = 58.3e-6
 gamma_star_p = 85.5e-6
 mdp   = mdn + dmdp  # 1.86965
 mdstn = mdn + dmdstn
@@ -23,6 +23,12 @@ br_dstp_dppin = 0.307  # D*+ -> D+ pi0
 br_dstp_dnpip = 0.677  # D*+ -> D0 pi+
 br_dstn_dnpin = 0.647  # D*0 -> D0 pi0
 br_dstn_dngam = 0.353  # D*0 -> D0 gamma
+
+# Energy-dependent width of D*0
+delta000 = mdstn - mdn - mpin
+mdstnSq = mdstn**2
+gamma_star_n_dnpin = gamma_star_n * br_dstn_dnpin
+gamma_star_n_dngam = gamma_star_n * br_dstn_dngam
 
 # Resolution parameters
 sigma_mdn = 8.20 * 10**-3  # m(D0) LHCb resolution

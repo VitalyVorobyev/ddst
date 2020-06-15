@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 from params import *
 from dalitzphsp import DalitzPhsp
-from lineshape_hanhart import TMtx, RelativisticBreitWigner, MagSq
+from lineshape_hanhart import TMtx, RelativisticBreitWigner, MagSq, RbwDstn
 
 VERB=False
 
@@ -16,8 +16,9 @@ class DnDpPin(DalitzPhsp):
         self.tmtx = TMtx(gs, gt)
         self.setE(E)
         self.alpha = alpha_pwave
-        self.bwdstp = lambda s: RelativisticBreitWigner(s, mdstp, gamma_star_p)  # * np.sqrt(br_dstp_dppin)
-        self.bwdstn = lambda s: RelativisticBreitWigner(s, mdstn, gamma_star_n)  # * np.sqrt(br_dstn_dnpin)
+        self.bwdstp = lambda s: RelativisticBreitWigner(s, mdstp, gamma_star_p)
+        # self.bwdstn = lambda s: RelativisticBreitWigner(s, mdstn, gamma_star_n)
+        self.bwdstn = lambda s: RbwDstn(s)
         self.a1 = self.ampl1     if channels[0] else lambda x: 0
         self.a2 = self.ampl2     if channels[1] else lambda x: 0
         self.a3 = self.inelastic if channels[2] else lambda x,y: 0

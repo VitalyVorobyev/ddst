@@ -11,6 +11,15 @@ def RelativisticBreitWigner(s, m, G):
     """ Relativistic Breit-Wigner """
     return 1. / (m**2 - s -1j*m*G)
 
+def DstnWidth(s):
+    """ D*0 with energy-dependent width """
+    return gamma_star_n_dngam + gamma_star_n_dnpin *\
+        ((np.sqrt(s) - mdn - mpin) / delta000)**(1.5)
+
+def RbwDstn(s):
+    """ D*0 RWB with energy-dependent width """
+    return 1. / (mdstnSq - s - 1j*mdstn*DstnWidth(s))
+
 def MagSq(z):
     return z.real**2 + z.imag**2
 
@@ -68,6 +77,17 @@ def main():
     print(f't12 {t.t12()*10**3}')
     print(f'2mu {t.mu*2}')
     print(MagSq((t.t11(k2) + t.t12()) / t.det(k1, k2)) * 10**-6)
+
+    import matplotlib.pyplot as plt
+    plt.figure()
+    E = np.linspace(mdn + mpin, mdstn+2e-3)
+    plt.plot((E - mdstn)*10**3, DstnWidth(E**2)*10**6)
+    plt.xlabel('E (MeV)', fontsize=14)
+    plt.ylabel('D*0 width (keV)', fontsize=14)
+    plt.ylim(0, 80)
+    plt.grid()
+    plt.tight_layout()
+    plt.show()
 
 if __name__ == '__main__':
     main()
