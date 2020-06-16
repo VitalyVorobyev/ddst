@@ -1,7 +1,8 @@
 """ [Hanhart, arXiv:1602.00940] """
 
 import numpy as np
-from .params import gs, gt, mdn, mpin, gamma_star_n_dngam, gamma_star_n_dnpin, mdstn, mdstnSq, delta000, mdp, mdstp
+from .params import gs, gt, mdn, mpin, mdstn, mdstnSq, mdp, mdstp
+from .params import gamma_star_n_dngam, gamma_star_n_dnpin, delta000, gamma_star_n
 
 def rmass(m1, m2):
     """ Reduced mass """
@@ -13,12 +14,15 @@ def RelativisticBreitWigner(s, m, G):
 
 def DstnWidth(s):
     """ D*0 with energy-dependent width """
+    deltaE = np.sqrt(s) - mdn - mpin
+    deltaE[deltaE<0] = 0
     return gamma_star_n_dngam + gamma_star_n_dnpin *\
-        ((np.sqrt(s) - mdn - mpin) / delta000)**(1.5)
+        (deltaE / delta000)**(1.5)
 
 def RbwDstn(s):
     """ D*0 RWB with energy-dependent width """
     return 1. / (mdstnSq - s - 1j*mdstn*DstnWidth(s))
+    # return 1. / (mdstnSq - s - 1j*mdstn*gamma_star_n)
 
 def MagSq(z):
     return z.real**2 + z.imag**2

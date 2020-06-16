@@ -3,9 +3,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from .params import *
+from .params import gs, gt, mdn, mdp, GammaScale
 from .dalitzphsp import DalitzPhsp
-from .lineshape_hanhart import TMtx, RelativisticBreitWigner, MagSq
+from .lineshape_hanhart import TMtx, RbwDstn, MagSq
 
 VERB=False
 
@@ -14,7 +14,7 @@ class DnDpGam(DalitzPhsp):
     def __init__(self, gs, gt, E):
         super(DnDpGam, self).__init__(E + TMtx.thr, mdn, mdp, 0)
         self.tmtx = TMtx(gs, gt)
-        self.bwdstn = lambda s: RelativisticBreitWigner(s, mdstn, gamma_star_n)
+        self.bwdstn = lambda s: RbwDstn(s)
         self.setE(E)
 
     def setE(self, E):
@@ -27,7 +27,7 @@ class DnDpGam(DalitzPhsp):
             print('  t2:  {:.3f}'.format(self.t2))
 
     def calc(self, mdd, mdnga):
-        return self.KineC(mdd) * MagSq(self.t2 * self.bwdstn(mdnga)) * GammaScale  # * br_dstn_dngam
+        return self.KineC(mdd)**2 * MagSq(self.t2 * self.bwdstn(mdnga)) * GammaScale
 
     def __call__(self, mdd, mdnga):
         mask = self.inPhspABAC(mdd, mdnga)

@@ -62,6 +62,7 @@ gt = (25000 + 1.5j) * 10**-3
 DalitzNBins = 512
 GammaScale = 0.491e-3
 # GammaScale = 0.024
+phsp_mom_power = 2.5
 
 #######################
 ##  D0D+pi0  options ##
@@ -78,6 +79,7 @@ g2 = 1.
 Rin = 1e-3
 phiin = 1.*np.pi
 #######################
+
 
 datapath = '/home/vitaly/work/lhcb/DDpi'
 datafile = '/'.join([datapath, 'all.root'])

@@ -20,7 +20,6 @@ class DnDpPin(DalitzPhsp):
         self.setE(E)
         self.alpha = alpha_pwave
         self.bwdstp = lambda s: RelativisticBreitWigner(s, mdstp, gamma_star_p)
-        # self.bwdstn = lambda s: RelativisticBreitWigner(s, mdstn, gamma_star_n)
         self.bwdstn = lambda s: RbwDstn(s)
         self.a1 = self.ampl1     if channels[0] else lambda x: 0
         self.a2 = self.ampl2     if channels[1] else lambda x: 0
@@ -65,7 +64,7 @@ class DnDpPin(DalitzPhsp):
 
     def calc(self, mdd, mdnpi):
         mdppi = self.mZsq(mdd, mdnpi)
-        return self.KineC(mdd) * self.pdf(
+        return 2*mpin*self.KineC(mdd) * self.pdf(
             self.a1(mdppi), self.a2(mdnpi), norm_pwave*self.a3(mdd, mdppi))
 
     def __call__(self, mdd, mdnpi):

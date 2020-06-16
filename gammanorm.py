@@ -17,8 +17,8 @@ from lib.dndpgam import DnDpGam
 
 def getespec(emin=3, emax=10):
     """ """
-    N = 512
-    bins=512
+    N = 256
+    bins=256
     E = np.linspace(emin, emax, N)*10**-3
 
     pdf = [

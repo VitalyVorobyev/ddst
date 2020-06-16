@@ -29,7 +29,7 @@ class DnDnPip(DalitzPhsp):
     def calc(self, mdd, md1pi):
         md2pi = self.mZsq(mdd, md1pi)
         ampl = self.t * (self.bwdstp(md1pi) + self.bwdstp(md2pi))
-        return self.KineC(mdd) * MagSq(ampl)
+        return 2*mpip*self.KineC(mdd) * MagSq(ampl)
     
     def __call__(self, mdd, md1pi):
         mask = self.inPhspABAC(mdd, md1pi)
