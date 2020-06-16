@@ -3,9 +3,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from params import *
-from dalitzphsp import DalitzPhsp
-from lineshape_hanhart import TMtx, RelativisticBreitWigner, MagSq, RbwDstn
+from .params import *
+from .dalitzphsp import DalitzPhsp
+from .lineshape_hanhart import TMtx, RelativisticBreitWigner, MagSq, RbwDstn
 
 VERB=False
 

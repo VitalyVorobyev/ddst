@@ -1,11 +1,12 @@
 """ [D*+ -> D0 pi+] D0 """
 
+import sys
 import numpy as np
 import matplotlib.pyplot as plt
 
-from params import *
-from dalitzphsp import DalitzPhsp
-from lineshape_hanhart import TMtx, RelativisticBreitWigner, MagSq
+from .params import gs, gt, mdn, mdn, mpip, mdstp, gamma_star_p, DalitzNBins
+from .dalitzphsp import DalitzPhsp
+from .lineshape_hanhart import TMtx, RelativisticBreitWigner, MagSq
 
 VERB = False
 

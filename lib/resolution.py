@@ -6,7 +6,7 @@ from scipy.stats import norm
 
 import matplotlib.pyplot as plt
 
-from params import *
+from .params import sigma_ppi, sigma_mdn, mpip, mdn, mdstp
 
 sppiSq = sigma_ppi**2
 smdSq = sigma_mdn**2

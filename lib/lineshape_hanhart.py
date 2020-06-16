@@ -1,7 +1,7 @@
 """ [Hanhart, arXiv:1602.00940] """
 
 import numpy as np
-from params import *
+from .params import gs, gt, mdn, mpin, gamma_star_n_dngam, gamma_star_n_dnpin, mdstn, mdstnSq, delta000, mdp, mdstp
 
 def rmass(m1, m2):
     """ Reduced mass """

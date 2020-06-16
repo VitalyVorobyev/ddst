@@ -1,16 +1,13 @@
 #! /usr/bin/env python
 
-import sys
-sys.path.append('./lib')
-
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
 matplotlib.rc('xtick', labelsize=16)
 matplotlib.rc('ytick', labelsize=16)
 
-from dndnpip import DnDnPip
-from params import gs, gt, mdn
+from lib.dndnpip import DnDnPip
+from lib.params import gs, gt, mdn
 
 def run(elo=-1, ehi=1):
     """ """

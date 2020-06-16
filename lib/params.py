@@ -82,9 +82,9 @@ datapath = '/home/vitaly/work/lhcb/DDpi'
 datafile = '/'.join([datapath, 'all.root'])
 
 if __name__ == '__main__':
-    print('m(D0) + m(D*+): {:.3f}'.format(mdn + mdstp))
-    print('m(D+) + m(D*0): {:.3f}'.format(mdp + mdstn))
-    print('m(D*0): {:.3f}'.format(mdstn))
-    print('m(D*+): {:.3f}'.format(mdstp))
-    print('m^2(D*0): {:.3f}'.format(mdstn**2))
-    print('m^2(D*+): {:.3f}'.format(mdstp**2))
+    print(f'm(D0) + m(D*+): {mdn + mdstp:.3f}')
+    print(f'm(D+) + m(D*0): {mdp + mdstn:.3f}')
+    print(f'm(D*0): {mdstn:.3f}')
+    print(f'm(D*+): {mdstp:.3f}')
+    print(f'm^2(D*0): {mdstn**2:.3f}')
+    print(f'm^2(D*+): {mdstp**2:.3f}')
