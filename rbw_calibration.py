@@ -4,8 +4,8 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
-matplotlib.rc('xtick', labelsize=16)
-matplotlib.rc('ytick', labelsize=16)
+matplotlib.rc('xtick', labelsize=14)
+matplotlib.rc('ytick', labelsize=14)
 
 from lib.params import gamma_star_n_dngam, gamma_star_n_dnpin, gamma_star_n
 from lib.params import mdstn, mdn, mpin, GammaScale
@@ -36,17 +36,21 @@ def run(nsigma=10):
     Ipin = np.sum(ppin) * dE
     Igam = np.sum(pgam) * dE
 
-    print(f'pi0: {Ipin:.3f}')
-    print(f'gam: {Igam:.3f}')
     # Ipin / gamma_star_n_dnpin = scale * Igam / gamma_star_n_dngam
-    gamScale = Ipin / gamma_star_n_dnpin * gamma_star_n_dngam / Igam
-    print(f'scale {gamScale*10**3:.3f}e-3')
+    gam_scale = Ipin / gamma_star_n_dnpin * gamma_star_n_dngam / Igam
+    print(f'gam fact {gam_scale*10**3:.3f}e-3')
+    # gamma_star_n_dnpin = Ipin * absolute_factor
+    absolute_factor = gamma_star_n_dnpin / Ipin
+    print(f'abs fact {absolute_factor:.3f}')
+
+    ppin *= absolute_factor
+    pgam *= absolute_factor * gam_scale
 
     E = (E - mdstn)*10**6
     plt.figure(figsize=(8,6))
     plt.plot(E, ppin, label=r'$D^0\pi^0$')
-    plt.plot(E, pgam*gamScale, label=r'$D^0\gamma$')
-    plt.xlabel(r'$\Delta E$ (keV)', fontsize=14)
+    plt.plot(E, pgam, label=r'$D^0\gamma$')
+    plt.xlabel(r'$\Delta E$ (keV)', fontsize=16)
     plt.ylim([0, 1.05*max(ppin)])
     plt.xlim([E[0], E[-1]])
     plt.grid()

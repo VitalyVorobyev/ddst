@@ -49,6 +49,16 @@ def smear_mdpi(mdpi, p, dots=250):
     r /= np.sum(r, axis=0)
     return (newx, np.sum(spline(mdpi, p, newx) @ r, axis=0))
 
+def smear_e_fixed_tdd(ev, epdf, tdd):
+    """ ev: np.array - energy linspace
+        epdf: np.array - energy pdf
+        tdd - T(DD)
+    """
+    result = np.zeros(ev.shape)
+    for e, p in zip(ev, epdf):
+        result += p * norm.pdf(ev, e, smddpi(e, tdd))
+    return result
+
 def smear_e(e, ev, tdd, ptdd, dots=250):
     """ e: float - current energy
         ev: np.array - energy linspace

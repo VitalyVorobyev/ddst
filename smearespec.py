@@ -2,21 +2,19 @@
 """ """
 
 import sys
-sys.path.append('./lib')
-
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy import integrate
 
-from params import gs, gt, mdn, mdp
-from resolution import smear_e
-
-from dndnpip import DnDnPip
-from dndppin import DnDpPin
-from dndpgam import DnDpGam
+from lib.params import gs, gt, mdn, mdp
+from lib.resolution import smear_e
+from lib.dndnpip import DnDnPip
+from lib.dndppin import DnDpPin
+from lib.dndpgam import DnDpGam
 
 def getespec(emin=-2, emax=4):
     """ """
-    N = 1024
+    N = 512
     bins=512
     E = np.linspace(emin, emax, N)*10**-3
 
@@ -45,6 +43,7 @@ def getespec(emin=-2, emax=4):
     sigmas = [np.zeros(E.shape) for _ in pdf]
 
     for idx, energy in enumerate(E):
+        print(f'{energy*10**3:.3f} ({idx}/{E.shape[0]})')
         for i, ism, p, g, tdd, sig in zip(I, I_smeared, pdf, grid, tdds, sigmas):
             p.setE(energy)
             (mdd, mdh), ds = g
@@ -61,8 +60,11 @@ def getespec(emin=-2, emax=4):
     # I_smeared = [i/n for i,n in zip(I_smeared, norm)]
     plt.figure(figsize=(8,6))
     for i, ism, l in zip(I, I_smeared, labels):
+        ism = ism / np.sum(ism) * np.sum(i)
         plt.plot(E, i, label=l)
-        plt.plot(E, ism / np.sum(ism) * np.sum(i), label=l+' smeared')
+        plt.plot(E, ism, label=l+' smeared')
+        print(f'    Raw: {np.sum(i):.3f}')
+        print(f'Smeared: {np.sum(ism):.3f}')
     plt.xlim(E[0], E[-1])
     plt.ylim(0, 1.05*max([np.max(i) for i in I]))
     plt.legend(loc='best', fontsize=20)

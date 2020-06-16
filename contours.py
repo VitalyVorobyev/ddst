@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 
+import sys
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
@@ -8,6 +9,7 @@ matplotlib.rc('ytick', labelsize=16)
 
 from lib.dndnpip import DnDnPip
 from lib.params import gs, gt, mdn
+from lib.resolution import smear_e_fixed_tdd
 
 def run(elo=-1, ehi=1):
     """ """
@@ -29,7 +31,12 @@ def run(elo=-1, ehi=1):
         pdf.setE(energy)
         I[:,idx] = np.sum(pdf(*gridABAC)[0], axis=0) * sqrtABspace
 
-    tdd = (sqrtABspace - 2*mdn)*10**3
+    tdd = (sqrtABspace - 2*mdn)
+
+    for idx, x in enumerate(tdd):
+        I[idx,:] = smear_e_fixed_tdd(E, I[idx,:], x)
+
+    tdd *= 10**3
     E *= 10**3
     x,y = np.meshgrid(tdd, E)
 
@@ -50,4 +57,5 @@ def run(elo=-1, ehi=1):
     plt.show()
 
 if __name__ == '__main__':
-    run()
+    elo, ehi = [float(x) for x in sys.argv[1:]]
+    run(elo, ehi)

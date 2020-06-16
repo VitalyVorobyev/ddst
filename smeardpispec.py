@@ -2,16 +2,14 @@
 """ """
 
 import sys
-sys.path.append('./lib')
-
 import numpy as np
 import matplotlib.pyplot as plt
 
-from dndnpip import DnDnPip
-from dndppin import DnDpPin
-from dndpgam import DnDpGam
-from resolution import smear_mdpi
-from params import *
+from lib.dndnpip import DnDnPip
+from lib.dndppin import DnDpPin
+from lib.dndpgam import DnDpGam
+from lib.resolution import smear_mdpi
+from lib.params import gs, gt
 
 def getdpispec(emin=-2, emax=3):
     """ """
