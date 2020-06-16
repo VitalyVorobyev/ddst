@@ -60,7 +60,8 @@ gs = (   43 + 1.5j) * 10**-3
 gt = (25000 + 1.5j) * 10**-3
 
 DalitzNBins = 512
-GammaScale = 0.024
+GammaScale = 0.491e-3
+# GammaScale = 0.024
 
 #######################
 ##  D0D+pi0  options ##

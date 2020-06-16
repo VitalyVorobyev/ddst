@@ -3,7 +3,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from .params import *
+from .params import gs, gt, mdn, mdp, mpin, mdstp, gamma_star_p
+from .params import Rin, g1, g2, phiin
+from .params import norm_pwave, alpha_pwave, DalitzNBins
+from .params import include_dstpdn, include_dstndp, include_dd_pwave, interf_dndstp_dpdstn
 from .dalitzphsp import DalitzPhsp
 from .lineshape_hanhart import TMtx, RelativisticBreitWigner, MagSq, RbwDstn
 

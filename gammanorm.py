@@ -2,18 +2,18 @@
 """ """
 
 import sys
-sys.path.append('./lib')
-
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
 matplotlib.rc('xtick', labelsize=16)
 matplotlib.rc('ytick', labelsize=16)
 
-from params import *
-from dndnpip import DnDnPip
-from dndppin import DnDpPin
-from dndpgam import DnDpGam
+from lib.params import gs, gt
+from lib.params import br_dstn_dngam, br_dstn_dnpin
+from lib.params import br_dstp_dnpip, br_dstp_dppin
+from lib.dndnpip import DnDnPip
+from lib.dndppin import DnDpPin
+from lib.dndpgam import DnDpGam
 
 def getespec(emin=3, emax=10):
     """ """

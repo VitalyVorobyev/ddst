@@ -6,9 +6,9 @@ def Kallen(Msq, m1sq, m2sq):
     """ Kallen's triangle function """
     return (Msq - m1sq - m2sq)**2 - 4*m1sq*m2sq
 
-def two_body_momentum(M, m1sq, m2sq):
+def two_body_momentum(Msq, m1sq, m2sq):
     """ """
-    return 0.5 * Kallen(M**2, m1sq, m2sq) / M
+    return 0.5 * Kallen(Msq, m1sq, m2sq) / np.sqrt(Msq)
 
 class DalitzPhsp(object):
     """ A Dalitz phase space tool. Only required features implemented """

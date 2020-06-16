@@ -1,8 +1,6 @@
 #! /usr/bin/env python
 
 import sys
-sys.path.append('./lib')
-
 import numpy as np
 from scipy.interpolate import UnivariateSpline
 import matplotlib
@@ -10,10 +8,10 @@ matplotlib.rc('xtick', labelsize=16)
 matplotlib.rc('ytick', labelsize=16)
 import matplotlib.pyplot as plt
 
-from dndnpip import DnDnPip
-from dndppin import DnDpPin
-from resolution import smear_tdd, smear_e, smear_mdpi
-from params import *
+from lib.dndnpip import DnDnPip
+from lib.dndppin import DnDpPin
+from lib.resolution import smear_tdd, smear_e, smear_mdpi
+from lib.params import gs, gt
 
 def run(elo=-0.5, ehi=0.0):
     """ """
