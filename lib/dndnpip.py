@@ -5,6 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from .params import gs, gt, mdn, mdn, mpip, mdstp, gamma_star_p, DalitzNBins
+from .params import phiins, include_dstndp, include_dd_swave, Rin, g1, g2, norm_swave
 from .dalitzphsp import DalitzPhsp
 from .lineshape_hanhart import TMtx, RelativisticBreitWigner, MagSq
 
@@ -12,24 +13,33 @@ VERB = False
 
 class DnDnPip(DalitzPhsp):
     """ """
-    def __init__(self, gs, gt, E):
+    def __init__(self, gs, gt, E, channels=[include_dstndp, include_dd_swave]):
         super(DnDnPip, self).__init__(E + TMtx.thr, mdn, mdn, mpip)
         self.tmtx = TMtx(gs, gt)
         self.setE(E)
         self.bwdstp = lambda s: RelativisticBreitWigner(s, mdstp, gamma_star_p)
+        self.a1 = self.dstn_ampl if channels[0] else lambda x,y: 0
+        self.a2 = self.inelastic if channels[1] else lambda: 0
 
     def setE(self, E):
-        self.t = np.sum(self.tmtx(E)[0])
+        tmtx = self.tmtx(E)
+        self.t = np.sum(tmtx[0])
+        self.tin = Rin * (g1*self.t + g2*np.sum(tmtx[1]))
         self.setM(E + TMtx.thr)
         if VERB:
             print('##### DDPi: E {:.3f} MeV #####'.format(E*10**3))
             print('  mX:  {:.3f} MeV'.format(self.mo*10**3))
             print('   t:  {:.3f}'.format(self.t))
 
-    def calc(self, mdd, md1pi):
+    def inelastic(self):
+        return norm_swave * np.exp(1.j*phiins)*self.tin
+
+    def dstn_ampl(self, mdd, md1pi):
         md2pi = self.mZsq(mdd, md1pi)
-        ampl = self.t * (self.bwdstp(md1pi) + self.bwdstp(md2pi))
-        return 2*mpip*self.KineC(mdd) * MagSq(ampl)
+        return self.t * (self.bwdstp(md1pi) + self.bwdstp(md2pi))
+
+    def calc(self, mdd, md1pi):
+        return 2*mpip*self.KineC(mdd) * MagSq(self.a1(mdd, md1pi) + self.a2())
     
     def __call__(self, mdd, md1pi):
         mask = self.inPhspABAC(mdd, md1pi)

@@ -6,17 +6,15 @@
 """
 
 import sys
-sys.path.append('./lib')
-
 import numpy as np
 from scipy.interpolate import interp1d
 import matplotlib.pyplot as plt
 
-from dndnpip import DnDnPip
-from dndppin import DnDpPin
-from dndpgam import DnDpGam
-from resolution import smear_tdd, smear_e, smear_mdpi
-from params import *
+from lib.dndnpip import DnDnPip
+from lib.dndppin import DnDpPin
+from lib.dndpgam import DnDpGam
+from lib.resolution import smear_tdd, smear_e, smear_mdpi
+from lib.params import gs, gt, mdn, mdp
 
 include_pwave = False
 hide_invisible = False
@@ -53,14 +51,16 @@ def run(elo=-2, ehi=8):
 
     E = np.linspace(elo, ehi, nEbins)*10**-3
     pdf = [
-        DnDnPip(gs, gt, E[-1]),
+        DnDnPip(gs, gt, E[-1], [True, False]),
         DnDpPin(gs, gt, E[-1], [True, True, include_pwave]),
         DnDpGam(gs, gt, E[-1]),
-        DnDpPin(gs, gt, E[-1], [False, False, True])  # P-wave amplitude
+        DnDpPin(gs, gt, E[-1], [False, False, True]),  # P-wave amplitude
+        DnDnPip(gs, gt, E[-1], [False, True]),  # S-wave amplitude
     ]
 
     I = {
         'Pwave'     : np.zeros(nEbins),
+        'Swave'     : np.zeros(nEbins),
         'DDpi'      : np.zeros(nEbins),
         'DDpi0'     : np.zeros(nEbins),
         'DDgam'     : np.zeros(nEbins),
@@ -68,7 +68,9 @@ def run(elo=-2, ehi=8):
         'DDpi0S'    : np.zeros(nEbins),
         'DDgamS'    : np.zeros(nEbins),
         'PwaveS'    : np.zeros(nEbins),
+        'SwaveS'    : np.zeros(nEbins),
         'D0D+Pw'    : np.zeros(nABbins),
+        'D0D0Sw'    : np.zeros(nABbins),
         'D0D+pi'    : np.zeros(nABbins),
         'D0D+ga'    : np.zeros(nABbins),
         'D0D0'      : np.zeros(nABbins),
@@ -81,7 +83,7 @@ def run(elo=-2, ehi=8):
     abspace = [p.linspaceAB(nABbins) for p in pdf]
     acspace = [p.linspaceAC(nACbins) for p in pdf]
     bcspace = [p.linspaceBC(nBCbins) for p in pdf]
-    thrs = [mdn+mdn, mdn+mdp, mdn+mdp, mdn+mdp]
+    thrs = [mdn+mdn, mdn+mdp, mdn+mdp, mdn+mdp, mdn+mdn]
     tddspace = [np.sqrt(x) - thr for x, thr in zip(abspace, thrs)]
     dab = [x[1] - x[0] for x in abspace]
     dac = [x[1] - x[0] for x in acspace]
@@ -100,11 +102,13 @@ def run(elo=-2, ehi=8):
         I['DDgam'][idx] = np.sum(mab[2]) * dab[2]
         if include_pwave:
             I['Pwave'][idx] = np.sum(mab[3]) * dab[3]
+        I['Swave'][idx] = np.sum(mab[4]) * dab[4]
 
         I['D0D0']   += mab[0]
         I['D0D+pi'] += mab[1]
         I['D0D+ga'] += mab[2]
         I['D0D+Pw'] += mab[3]
+        I['D0D0Sw'] += mab[4]
 
         densACBC = pdf[0](pdf[0].mZsq(*gridsACBC[0]), gridsACBC[0][1])[0]
         densACBC[ddpi_mask] = 0
@@ -113,22 +117,22 @@ def run(elo=-2, ehi=8):
         else:
             I['D0piBelow'] += dbc[0] * np.sum(densACBC, axis=0)
         
-        # dI, eres = smear_e(energy, E, tddspace[0], mab[0])
-        I['DDpiS'] += smear_e(energy, E, tddspace[0], mab[0])[0]
+        I['DDpiS']  += smear_e(energy, E, tddspace[0], mab[0])[0]
         I['DDpi0S'] += smear_e(energy, E, tddspace[1], mab[1])[0]
         I['DDgamS'] += smear_e(energy, E, tddspace[2], mab[2])[0]
         if include_pwave:
             I['PwaveS'] += smear_e(energy, E, tddspace[3], mab[3])[0]
-        # print(f'sigma(E): {eres}')
-    # print(I['DDpiS'] / np.max(I['DDpiS']))
+        I['SwaveS'] += smear_e(energy, E, tddspace[4], mab[4])[0]
 
     _, ax = plt.subplots(2, 3, figsize=(18,12))
     E *= 10**3
     # Energy w/o smearing
     cax = ax[0,0]
     print('Pwave integral {:.0f}'.format(np.sum(I['Pwave'])))
+    print('Swave integral {:.0f}'.format(np.sum(I['Swave'])))
     print(' DDpi integral {:.0f}'.format(np.sum(I['DDpi'])))
     print(' Pwave fraction {:.2f}'.format(np.sum(I['Pwave']) / np.sum(I['DDpi'])))
+    print(' Swave fraction {:.2f}'.format(np.sum(I['Swave']) / np.sum(I['DDpi'])))
     ymax = np.max(I['DDpi'])
     # cax.set(xlabel=r'$E$ (MeV)', ylim=(0, 1.01), xlim=(E[0], E[-1]))
     cax.set(xlabel=r'$E$ (MeV)', ylim=(0, 1.01), xlim=(E[0], 5))
@@ -136,6 +140,7 @@ def run(elo=-2, ehi=8):
     cax.plot(E, I['DDpi']  / ymax, label=r'$D^0D^0\pi^+$')
     if not hide_invisible:
         cax.plot(E, I['DDpi0'] / ymax, label=r'$D^0D^+\pi^0$')
+        cax.plot(E, I['Swave'] / ymax, label=r'$D^0D^0$ $S$-wave')
         cax.plot(E, I['DDgam'] / ymax, label=r'$D^0D^+\gamma$')
         if include_pwave:
             cax.plot(E, I['Pwave'] / ymax, label=r'$D^0D^+$ $P$-wave')
@@ -150,9 +155,10 @@ def run(elo=-2, ehi=8):
     cax.plot(E, I['DDpiS']  / ymax, label=r'$D^0D^0\pi^+$')
     if not hide_invisible:
         cax.plot(E, I['DDpi0S'] / ymax, label=r'$D^0D^+\pi^0$')
-        cax.plot(E, I['DDgamS'] / ymax, label=r'$D^0D^+\gamma$')
+        # cax.plot(E, I['DDgamS'] / ymax, label=r'$D^0D^+\gamma$')
         if include_pwave:
             cax.plot(E, I['PwaveS'] / ymax, label=r'$D^0D^+$ $P$-wave')
+        cax.plot(E, I['SwaveS'] / ymax, label=r'$D^0D^0$ $S$-wave')
     cax.legend(loc='best', fontsize=16)
 
     # m(DD) w/o smearing
@@ -162,8 +168,8 @@ def run(elo=-2, ehi=8):
     pdndppi = I['D0D+pi'] * 2 * np.sqrt(abspace[1])
     pdndpga = I['D0D+ga'] * 2 * np.sqrt(abspace[2])
     pdndppw = I['D0D+Pw'] * 2 * np.sqrt(abspace[3])
+    pdndnsw = I['D0D0Sw'] * 2 * np.sqrt(abspace[4])
     x, y = merge(tddspace[1], pdndppi, tddspace[2], pdndpga)
-    # x, y = merge(tddspace[3], pdndppw, x, y)
     ymax = max(np.max(pdndn), np.max(y))
 
     # cax.set(xlabel=r'$T(DD)$ (MeV)', ylim=(0, 1.01), xlim=(0, ehi*2))
@@ -173,6 +179,7 @@ def run(elo=-2, ehi=8):
     cax.plot(tddspace[2], pdndpga / ymax, '--' , label=r'$D^0D^+(\gamma)$')
     if include_pwave:
         cax.plot(tddspace[3], pdndppw / ymax, '--' , label=r'$D^0D^+$ $P$-wave')
+    cax.plot(tddspace[4], pdndnsw / ymax, '--' , label=r'$D^0D^0$ $S$-wave')
     cax.plot(x, y / ymax, label=r'$D^0D^+ total$')
 
     cax.grid()

@@ -68,16 +68,18 @@ phsp_mom_power = 2.5
 ##  D0D+pi0  options ##
 #######################
 interf_dndstp_dpdstn = True  # Turn on interference between D*0D+ and D*+D0 in the D0D+pi0 channel
-include_dstndp = True  # if False the [D*0 -> D0 pi0]D+ amplitude is excluded
-include_dstpdn = True  # if False the [D*+ -> D+ pi0]D0 amplitude is excluded
+include_dstndp   = True  # if False the [D*0 -> D0 pi0]D+ amplitude is excluded
+include_dstpdn   = True  # if False the [D*+ -> D+ pi0]D0 amplitude is excluded
 include_dd_pwave = True
+include_dd_swave = True
 alpha_pwave = 0.
 norm_pwave = 0.8*10**11
-pwave_over_dndnpip = 0.2
+norm_swave = 0.07*10**6
 g1 = 1.
 g2 = 1.
 Rin = 1e-3
-phiin = 1.*np.pi
+phiinp = 1.*np.pi  # p-wave amplitude phase
+phiins = 0.*np.pi  # s-wave amplitude phase
 #######################
 
 

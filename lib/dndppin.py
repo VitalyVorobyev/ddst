@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from .params import gs, gt, mdn, mdp, mpin, mdstp, gamma_star_p
-from .params import Rin, g1, g2, phiin
+from .params import Rin, g1, g2, phiinp
 from .params import norm_pwave, alpha_pwave, DalitzNBins
 from .params import include_dstpdn, include_dstndp, include_dd_pwave, interf_dndstp_dpdstn
 from .dalitzphsp import DalitzPhsp
@@ -56,7 +56,7 @@ class DnDpPin(DalitzPhsp):
 
     def inelastic(self, mdd, mdppi):
         """ inelastic channel from T-matrix """
-        return np.exp(1.j*phiin) * self.tin * self.dbl_pBpC_AB(mdd, mdppi)
+        return np.exp(1.j*phiinp) * self.tin * self.dbl_pBpC_AB(mdd, mdppi)
 
     def pwave(self, mdd, mdppi):
         """ (D0D+) P-wave amplitude """

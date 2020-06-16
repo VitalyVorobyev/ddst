@@ -18,7 +18,7 @@ def run(elo=-1, ehi=1):
     nACbins = 256
 
     E = np.linspace(elo, ehi, nEbins)*10**-3
-    pdf = DnDnPip(gs, gt, E[-1])
+    pdf = DnDnPip(gs, gt, E[-1], [True, True])
 
     gridABAC = pdf.mgridABAC(nABbins, nACbins)[0]
     abspace = pdf.linspaceAB(nABbins)
