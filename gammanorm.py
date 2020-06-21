@@ -17,12 +17,12 @@ from lib.dndpgam import DnDpGam
 
 def getespec(emin=3, emax=10):
     """ """
-    N = 256
+    N = 128
     bins=256
     E = np.linspace(emin, emax, N)*10**-3
 
     pdf = [
-        DnDnPip(gs, gt, E[-1]),
+        DnDnPip(gs, gt, E[-1], channels=[True, False]),
         DnDpPin(gs, gt, E[-1], channels=[True, False, False]),
         DnDpPin(gs, gt, E[-1], channels=[False, True, False]),
         DnDpGam(gs, gt, E[-1])
@@ -37,6 +37,12 @@ def getespec(emin=3, emax=10):
             p.setE(energy)
             p.t1, p.t2, p.t = 1, 1, 1
             i[idx] = p.integral(grid=g)
+
+    gam_over_pi0 = I[3][-1] / I[2][-1]
+    scale = (br_dstn_dngam / br_dstn_dnpin) / gam_over_pi0
+    print(f'gam / pi0 = {gam_over_pi0:.3f}')
+    print(f'conmare to {br_dstn_dngam / br_dstn_dnpin:.3f}')
+    print(f'scaling: {scale:.3f}')
 
     E *= 10**3
     plt.figure(figsize=(8,6))
@@ -53,9 +59,8 @@ def getespec(emin=3, emax=10):
     plt.tight_layout()
     plt.grid()
 
-    plt.savefig('plots/gammanorm.png')
-    plt.savefig('plots/gammanorm.pdf')
-
+    for ext in ['png', 'pdf']:
+        plt.savefig(f'plots/gammanorm.{ext}')
 
     plt.figure()
     plt.plot(E, I[3], label=r'$\Gamma(D^{*0}\to D^0\gamma)$')
@@ -71,3 +76,4 @@ def getespec(emin=3, emax=10):
 if __name__ == '__main__':
     elo, ehi = [float(x) for x in sys.argv[1:]]
     getespec(elo, ehi)
+

@@ -8,7 +8,7 @@ def Kallen(Msq, m1sq, m2sq):
 
 def two_body_momentum(Msq, m1sq, m2sq):
     """ """
-    return 0.5 * Kallen(Msq, m1sq, m2sq) / np.sqrt(Msq)
+    return 0.5 * np.sqrt(Kallen(Msq, m1sq, m2sq)) / np.sqrt(Msq)
 
 class DalitzPhsp(object):
     """ A Dalitz phase space tool. Only required features implemented """

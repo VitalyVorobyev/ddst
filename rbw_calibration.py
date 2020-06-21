@@ -14,6 +14,7 @@ from lib.dalitzphsp import two_body_momentum
 
 mdnSq = mdn**2
 mpinSq = mpin**2
+mdstnSq = mdstn**2
 
 def pdf_dstn_dn_pin(s):
     """ """
@@ -21,7 +22,7 @@ def pdf_dstn_dn_pin(s):
 
 def pdf_dstn_dn_gam(s):
     """ """
-    return two_body_momentum(s, mdnSq, 0)**3 * MagSq(RbwDstn(s))
+    return two_body_momentum(s, mdnSq, 0)**1 * MagSq(RbwDstn(s))
 
 def run(nsigma=10):
     elo = mdstn - nsigma*gamma_star_n
@@ -41,7 +42,7 @@ def run(nsigma=10):
     print(f'gam fact {gam_scale*10**3:.3f}e-3')
     # gamma_star_n_dnpin = Ipin * absolute_factor
     absolute_factor = gamma_star_n_dnpin / Ipin
-    print(f'abs fact {absolute_factor:.3f}')
+    print(f'abs fact {absolute_factor*10**3:.3f}e-3')
 
     ppin *= absolute_factor
     pgam *= absolute_factor * gam_scale
@@ -56,8 +57,12 @@ def run(nsigma=10):
     plt.grid()
     plt.legend(loc='best', fontsize=16)
     plt.tight_layout()
+    for ext in ['png', 'pdf']:
+        plt.savefig(f'plots/rbw_norm.{ext}')
 
     plt.show()
 
 if __name__ == '__main__':
+    print(f'pi0 momentum {two_body_momentum(mdstnSq, mdnSq, mpinSq)*10**3:.3f} MeV')
+    print(f'gam momentum {two_body_momentum(mdstnSq, mdnSq, 0)*10**3:.3f} MeV')
     run(float(sys.argv[1]))

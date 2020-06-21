@@ -64,9 +64,7 @@ gs = (   43 + 1.5j) * 10**-3
 gt = (25000 + 1.5j) * 10**-3
 
 DalitzNBins = 512
-GammaScale = 0.491e-3
-# GammaScale = 0.024
-phsp_mom_power = 2.5
+GammaScale = 16.365e-3
 
 #######################
 ##  D0D+pi0  options ##
@@ -83,7 +81,7 @@ g1 = 1.
 g2 = 1.
 Rin = 1e-3
 phiinp = 1.*np.pi  # p-wave amplitude phase
-phiins = 0.*np.pi  # s-wave amplitude phase
+phiins = 1.*np.pi  # s-wave amplitude phase
 #######################
 
 
