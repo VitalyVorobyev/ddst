@@ -3,9 +3,6 @@
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib
-matplotlib.rc('xtick', labelsize=16)
-matplotlib.rc('ytick', labelsize=16)
 
 from lib.dndnpip import DnDnPip
 from lib.params import gs, gt, mdn

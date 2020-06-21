@@ -10,7 +10,7 @@ from .lineshape_hanhart import TMtx, RbwDstn, MagSq
 VERB=False
 
 class DnDpGam(DalitzPhsp):
-    """ """
+    """ The [X -> D+ [D*+ -> D0 gamma]] decay amplitude """
     def __init__(self, gs, gt, E):
         super(DnDpGam, self).__init__(E + TMtx.thr, mdn, mdp, 0)
         self.tmtx = TMtx(gs, gt)
