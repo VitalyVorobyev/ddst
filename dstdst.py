@@ -1,5 +1,6 @@
 """ A primitive toy study of the (D^*0 D^*+) contribution """
 
+import sys
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -53,9 +54,11 @@ def make_hist2d(x, y, w, nbins=250):
     xmg, ymg = np.meshgrid(binsx, binsy)
     return (xmg, ymg, z)
 
-def main():
-    sqrts = mdstn + mdstp + 1.e-3  # 1 MeV above the threshold
-    w, p = generate(sqrts, 10**6, 'gamma')
+def main(hkey, de):
+    # de = 0.1  # MeV above the threshold
+    ekey = f'{de}'
+    sqrts = mdstn + mdstp + de*1.e-3  # 1 MeV above the 
+    w, p = generate(sqrts, 10**6, hkey)
 
     nbins = 40
 
@@ -80,7 +83,7 @@ def main():
     plt.ylim(0, 1.05*max(y1))
 
     for ext in ['pdf', 'png']:
-        plt.savefig(f'plots/dstdst_ddpi.{ext}')
+        plt.savefig(f'plots/dstdst_ddpi_{hkey}_{ekey}.{ext}')
     ####
 
     # m(D0D0) #
@@ -95,7 +98,7 @@ def main():
     plt.ylim(0, 1.05*max(y2))
 
     for ext in ['pdf', 'png']:
-        plt.savefig(f'plots/dstdst_dd.{ext}')
+        plt.savefig(f'plots/dstdst_dd_{hkey}_{ekey}.{ext}')
     ####
 
     # Contours #
@@ -108,10 +111,12 @@ def main():
     plt.ylim(0, 10)
     plt.tight_layout()
     for ext in ['pdf', 'png']:
-        plt.savefig(f'plots/dstdst_contours.{ext}')
+        plt.savefig(f'plots/dstdst_contours_{hkey}_{ekey}.{ext}')
     ####
 
     plt.show()
 
 if __name__ == '__main__':
-    main()
+    hkey = sys.argv[1]
+    de = float(sys.argv[2])
+    main(hkey, de)
