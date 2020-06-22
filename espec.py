@@ -2,16 +2,14 @@
 """ """
 
 import sys
-sys.path.append('./lib')
-
 import numpy as np
 import matplotlib.pyplot as plt
 
-from params import gs, gt
+from lib.params import gs, gt
+from lib.dndnpip import DnDnPip
+from lib.dndppin import DnDpPin
+from lib.dndpgam import DnDpGam
 
-from dndnpip import DnDnPip
-from dndppin import DnDpPin
-from dndpgam import DnDpGam
 
 def getespec(emin=-2, emax=4):
     """ """
@@ -35,13 +33,12 @@ def getespec(emin=-2, emax=4):
     I = [np.empty(E.shape) for _ in pdf]
 
     for idx, energy in enumerate(E):
+        print(f'E = {energy*10**3:.3f} ({idx}/{E.shape[0]})')
         for i, p, g in zip(I, pdf, grid):
             p.setE(energy)
             i[idx] = p.integral(grid=g)
 
     E *= 10**3
-    # norm = [np.sum(i) * (E[-1] - E[0]) / N for i in I]
-    # I = [i/n for i,n in zip(I, norm)]
     plt.figure(figsize=(8,6))
     for i, l in zip(I, labels):
         plt.plot(E, i, label=l)
@@ -54,5 +51,8 @@ def getespec(emin=-2, emax=4):
     plt.show()
 
 if __name__ == '__main__':
-    elo, ehi = [float(x) for x in sys.argv[1:]]
-    getespec(elo, ehi)
+    try:
+        elo, ehi = [float(x) for x in sys.argv[1:]]
+        getespec(elo, ehi)
+    except ValueError:
+        print('Usage: ./espec.py [E low] [E high] (MeV)')

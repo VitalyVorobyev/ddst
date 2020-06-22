@@ -1,8 +1,5 @@
+#! /usr/bin/env python
 """ """
-
-import sys
-sys.path.append('lib')
-sys.path.append('data')
 
 import numpy as np
 from scipy.integrate import quad
@@ -13,8 +10,8 @@ import matplotlib.pyplot as plt
 
 from iminuit import Minuit
 
-from params import datafile, mdn, mdstp
-from plots import load_tree, make_hist
+from lib.params import datafile, mdn, mdstp
+from data.plots import load_tree, make_hist
 
 # Minuit helpers
 wolim = lambda name, mean, err, fixed: {
@@ -102,5 +99,5 @@ def resolution_calculator(smdstp, smdn):
     
 
 if __name__ == '__main__':
-    # main()
-    resolution_calculator(0.36, 8.16)
+    main()
+    # resolution_calculator(0.36, 8.16)

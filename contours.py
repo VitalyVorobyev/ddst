@@ -24,12 +24,13 @@ def run(elo=-1, ehi=1):
     I = np.empty((nABbins, nEbins))
 
     for idx, energy in enumerate(E):
-        print('E {:.3f} MeV'.format(energy*10**3))
+        print(f'E {energy*10**3:.3f} MeV ({idx}/{E.shape[0]})')
         pdf.setE(energy)
         I[:,idx] = np.sum(pdf(*gridABAC)[0], axis=0) * sqrtABspace
 
     tdd = (sqrtABspace - 2*mdn)
 
+    print('Applying energy resolution...')
     for idx, x in enumerate(tdd):
         I[idx,:] = smear_e_fixed_tdd(E, I[idx,:], x)
 
@@ -37,22 +38,30 @@ def run(elo=-1, ehi=1):
     E *= 10**3
     x,y = np.meshgrid(tdd, E)
 
+    label_size = 16
     plt.figure(figsize=(7,7))
     plt.contourf(x, y, I.T, levels=25)
-    plt.xlabel('T(DD) (MeV)', fontsize=14)
-    plt.ylabel('E (MeV)', fontsize=14)
+    plt.xlabel('T(DD) (MeV)', fontsize=label_size)
+    plt.ylabel('E (MeV)', fontsize=label_size)
     plt.tight_layout()
-    plt.savefig('plots/e_vs_tdd.png')
+
+    for ext in ['png', 'pdf']:
+        plt.savefig(f'plots/e_vs_tdd.{ext}')
 
     plt.figure(figsize=(7,7))
     plt.contourf(x, y, np.log(1. + I.T + 1.e-6), levels=25)
-    plt.xlabel('T(DD) (MeV)', fontsize=14)
-    plt.ylabel('E (MeV)', fontsize=14)
+    plt.xlabel('T(DD) (MeV)', fontsize=label_size)
+    plt.ylabel('E (MeV)', fontsize=label_size)
     plt.tight_layout()
-    plt.savefig('plots/e_vs_tdd_log.png')
+    for ext in ['png', 'pdf']:
+        plt.savefig(f'plots/e_vs_tdd_log.{ext}')
     
     plt.show()
 
+
 if __name__ == '__main__':
-    elo, ehi = [float(x) for x in sys.argv[1:]]
-    run(elo, ehi)
+    try:
+        elo, ehi = [float(x) for x in sys.argv[1:]]
+        run(elo, ehi)
+    except ValueError:
+        print('Usage: ./countours.py [E low] [E high] (MeV)')

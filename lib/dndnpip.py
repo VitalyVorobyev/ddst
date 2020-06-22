@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from .params import gs, gt, mdn, mdn, mpip, mdstp, gamma_star_p, DalitzNBins
 from .params import phiins, include_dstndp, include_dd_swave, Rin, g1, g2, norm_swave
 from .dalitzphsp import DalitzPhsp
-from .lineshape_hanhart import TMtx, RelativisticBreitWigner, MagSq
+from .lineshape import TMtx, RelativisticBreitWigner, MagSq
 
 
 class DnDnPip(DalitzPhsp):

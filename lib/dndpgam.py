@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 from .params import gs, gt, mdn, mdp, GammaScale
 from .dalitzphsp import DalitzPhsp
-from .lineshape_hanhart import TMtx, RbwDstn, MagSq
+from .lineshape import TMtx, RbwDstn, MagSq
 
 class DnDpGam(DalitzPhsp):
     """ The [X -> D+ [D*0 -> D0 gamma]] decay amplitude """

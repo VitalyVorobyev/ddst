@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 
 treekeys = ['mass_C1c', 'mass_C2c', 'mass_2Cc', 'pid_S1', 'pid_S2']
 
+
 def make_hist(data, range=None, nbins=100, density=False):
     if range is None:
         range = (np.min(data), np.max(data))
@@ -21,9 +22,11 @@ def make_hist(data, range=None, nbins=100, density=False):
                         0.5 + np.sqrt(dhist / norm + 0.25)]) * norm
     return (dbins, dhist, errors)
 
+
 def load_tree(infile=datafile, keys=treekeys):
     """ """
     return uproot.open(infile)['tree'].pandas.df(keys)
+
 
 def md_plot(df, r=(1.8, 1.925)):
     """ """
@@ -37,6 +40,7 @@ def md_plot(df, r=(1.8, 1.925)):
     plt.tight_layout()
     plt.show()
 
+
 def mdpi_plot(df, r=(2.006, 2.016)):
     """ """
     dbins, dhist, errors = make_hist(df['mass_C2c'], range=r)
@@ -49,11 +53,13 @@ def mdpi_plot(df, r=(2.006, 2.016)):
     plt.tight_layout()
     plt.show()
 
+
 def main():
     """ Unit test """
     df = load_tree()
     print(df.head())
     mdpi_plot(df)
+
 
 if __name__ == '__main__':
     main()

@@ -8,7 +8,7 @@ from .params import Rin, g1, g2, phiinp
 from .params import norm_pwave, alpha_pwave, DalitzNBins
 from .params import include_dstpdn, include_dstndp, include_dd_pwave, interf_dndstp_dpdstn
 from .dalitzphsp import DalitzPhsp
-from .lineshape_hanhart import TMtx, RelativisticBreitWigner, MagSq, RbwDstn
+from .lineshape import TMtx, RelativisticBreitWigner, MagSq, RbwDstn
 
 class DnDpPin(DalitzPhsp):
     """ The [X -> D0 D+ pi0] decay amplitude """
