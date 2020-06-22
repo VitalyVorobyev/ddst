@@ -12,6 +12,7 @@ is considered. T-matrix-based approach with two coupled elastic channels (`D0 D*
 
 * [`numpy`](numpy.org)
 * [`matplotlib`](matplotlib.org)
+* [`scipy`](scipy.org)
 
 ## [lib](lib) directory
 
@@ -34,4 +35,3 @@ Contains drivers for various actions with models from [lib](lib):
 * [dp.py](./dp.py) produces Dalitz plot distribution and it's projections for a given `E`
 * [espec.py](./espec.py) produces energy spectrum via grid integrals over the Dalitz plot phase space (w/o resolution convolution)
 * [observables.py](./observables.py) produces **summary plot** of all observables for the current model configuration
-

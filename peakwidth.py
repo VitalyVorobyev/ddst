@@ -25,7 +25,7 @@ def run(elo=-0.5, ehi=0.0):
     gridABAC, ds = pdf.mgridABAC(nABbins, nACbins)
 
     for idx, energy in enumerate(E):
-        print(f'E {energy*10**3:.3f} MeV')
+        print(f'E {energy*10**3:.3f} MeV ({idx}/{E.shape[0]})')
         pdf.setE(energy)
         I[idx] = ds*np.sum(pdf(*gridABAC)[0])
 
@@ -50,11 +50,14 @@ def run(elo=-0.5, ehi=0.0):
     plt.grid()
     plt.tight_layout()
 
-    plt.savefig('plots/peak.png')
-    plt.savefig('plots/peak.pdf')
+    for ext in ['png', 'pdf']:
+        plt.savefig(f'plots/peak.{ext}')
 
     plt.show()
 
 if __name__ == '__main__':
-    elo, ehi = [float(x) for x in sys.argv[1:]]
-    run(elo, ehi)
+    try:
+        elo, ehi = [float(x) for x in sys.argv[1:]]
+        run(elo, ehi)
+    except ValueError:
+        print('Usage: ./peakwidth [E low] [E high]')

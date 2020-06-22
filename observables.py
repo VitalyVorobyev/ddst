@@ -244,5 +244,8 @@ def run(elo=-2, ehi=8):
     plt.show()
 
 if __name__ == '__main__':
-    elo, ehi = [float(x) for x in sys.argv[1:]]
-    run(elo, ehi)
+    try:
+        elo, ehi = [float(x) for x in sys.argv[1:]]
+        run(elo, ehi)
+    except ValueError:
+        print('Usage: ./observables [E low] [E high]')

@@ -9,7 +9,7 @@ from lib.dndnpip import DnDnPip
 from lib.dndppin import DnDpPin
 from lib.dndpgam import DnDpGam
 from lib.resolution import smear_tdd
-from lib.params import gs, gt
+from lib.params import gs, gt, mdn, mdp
 
 def getddspec(emin=-2, emax=3):
     """ """

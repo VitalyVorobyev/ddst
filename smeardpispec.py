@@ -14,8 +14,8 @@ from lib.params import gs, gt
 def getdpispec(emin=-2, emax=3):
     """ """
     N = 512
-    bins=512
-    bins2=1024
+    bins=256
+    bins2=512
     E = np.linspace(emin, emax, N)*10**-3
     pdf = [
         DnDnPip(gs, gt, E[-1]),
@@ -30,8 +30,8 @@ def getdpispec(emin=-2, emax=3):
     I = [np.zeros(bins2) for _ in grids]
 
     fcn = [
-        lambda: pdf[0].mdpispec_hi(grid=grids[0]),
-        lambda: pdf[0].mdpispec_lo(grid=grids[0]),
+        lambda: pdf[0].mdpihspec(grid=grids[0]),
+        lambda: pdf[0].mdpilspec(grid=grids[0]),
     ]
 
     labels = [
@@ -39,7 +39,8 @@ def getdpispec(emin=-2, emax=3):
         r'$D^0\pi^+$ low',
     ]
 
-    for energy in E:
+    for idx, energy in enumerate(E):
+        print(f'E = {energy*10**3:.3f} MeV ({idx}/{E.shape[0]})')
         for p in pdf:
             p.setE(energy)
         for i, f in zip(I, fcn):
@@ -55,12 +56,15 @@ def getdpispec(emin=-2, emax=3):
         plt.plot(*smear_mdpi(x,y, 1024), label=l+' smeared')
     plt.ylim(0, 1.01*max([np.max(i) for i in I]))
     plt.xlim(2.00, 2.015)
-    plt.xlabel(r'$m(D\{\pi,\gamma\})$ (GeV)', fontsize=18)
+    plt.xlabel(r'$m(D^0\pi^+)$ (GeV)', fontsize=18)
     plt.legend(loc='best', fontsize=20)
     plt.tight_layout()
     plt.grid()
     plt.show()
 
 if __name__ == '__main__':
-    elo, ehi = [float(x) for x in sys.argv[1:]]
-    getdpispec(elo, ehi)
+    try:
+        elo, ehi = [float(x) for x in sys.argv[1:]]
+        getdpispec(elo, ehi)
+    except ValueError:
+        print('Usage: ./smeardpispec [E low] [E high]')
