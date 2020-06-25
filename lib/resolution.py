@@ -69,9 +69,13 @@ def smear_e(e, ev, tdd, ptdd, dots=250):
     newptdd = spline(tdd, ptdd, newtdd).flatten()
     er, tddr = np.meshgrid(ev, newtdd)
     r = norm.pdf(er, e, smddpi(e, tddr))
-    r /= np.sum(r, axis=0)
+    # r /= np.sum(r, axis=0)
     return (np.sum(newptdd.reshape(1,-1) @ r, axis=0),
             np.average(smddpi(e, newtdd.T), weights=newptdd))
+
+def smear_e_const(e, ev, tdd=None, ptdd=None, dots=250, sigma=0.00035):
+    """ """
+    return (norm.pdf(ev, e, sigma), sigma)
 
 def main():
     """ Unit test """

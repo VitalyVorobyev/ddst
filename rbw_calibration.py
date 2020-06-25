@@ -9,7 +9,7 @@ matplotlib.rc('ytick', labelsize=14)
 
 from lib.params import gamma_star_n_dngam, gamma_star_n_dnpin, gamma_star_n
 from lib.params import mdstn, mdn, mpin, GammaScale
-from lib.lineshape_hanhart import RbwDstn, MagSq
+from lib.lineshape import RbwDstn, MagSq
 from lib.dalitzphsp import two_body_momentum
 
 mdnSq = mdn**2

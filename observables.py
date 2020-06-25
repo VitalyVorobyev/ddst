@@ -13,11 +13,12 @@ import matplotlib.pyplot as plt
 from lib.dndnpip import DnDnPip
 from lib.dndppin import DnDpPin
 from lib.dndpgam import DnDpGam
-from lib.resolution import smear_tdd, smear_e, smear_mdpi
+from lib.resolution import smear_tdd, smear_e, smear_mdpi, smear_e_const
 from lib.params import gs, gt, mdn, mdp
 
 include_pwave = False
-hide_invisible = False
+include_swave = False
+hide_invisible = True
 
 def merge(x1, y1, x2, y2, bins=5000):
     newx = np.linspace(min(x1[0], x2[0]), max(x1[-1], x2[-1]), bins)
@@ -44,14 +45,14 @@ def merge(x1, y1, x2, y2, bins=5000):
 
 def run(elo=-2, ehi=8):
     """ """
-    nEbins  = 512
-    nABbins = 512
-    nACbins = 256
-    nBCbins = 512
+    nEbins  = 1024
+    nABbins = 1024
+    nACbins = 1024
+    nBCbins = 1024
 
     E = np.linspace(elo, ehi, nEbins)*10**-3
     pdf = [
-        DnDnPip(gs, gt, E[-1], [True, False]),
+        DnDnPip(gs, gt, E[-1], [True, include_swave]),
         DnDpPin(gs, gt, E[-1], [True, True, include_pwave]),
         DnDpGam(gs, gt, E[-1]),
         DnDpPin(gs, gt, E[-1], [False, False, True]),  # P-wave amplitude
@@ -117,12 +118,17 @@ def run(elo=-2, ehi=8):
         else:
             I['D0piBelow'] += dbc[0] * np.sum(densACBC, axis=0)
         
+        # eddpi_smeared, meanres = smear_e(energy, E, tddspace[0], mab[0])
+        # print(f'sigma(E) = {meanres*10**3:.3} MeV')
+        # I['DDpiS']  += I['DDpi'][idx]*eddpi_smeared
+        # I['DDpiS']  += I['DDpi'][idx]*smear_e_const(energy, E, tddspace[0], mab[0])[0]
         I['DDpiS']  += smear_e(energy, E, tddspace[0], mab[0])[0]
         I['DDpi0S'] += smear_e(energy, E, tddspace[1], mab[1])[0]
-        I['DDgamS'] += smear_e(energy, E, tddspace[2], mab[2])[0]
-        if include_pwave:
-            I['PwaveS'] += smear_e(energy, E, tddspace[3], mab[3])[0]
-        I['SwaveS'] += smear_e(energy, E, tddspace[4], mab[4])[0]
+        # I['DDpi0S'] += I['DDpi0'][idx]*smear_e_const(energy, E, tddspace[1], mab[1])[0]
+        # I['DDgamS'] += smear_e(energy, E, tddspace[2], mab[2])[0]
+        # if include_pwave:
+            # I['PwaveS'] += smear_e(energy, E, tddspace[3], mab[3])[0]
+        # I['SwaveS'] += smear_e(energy, E, tddspace[4], mab[4])[0]
 
     _, ax = plt.subplots(2, 3, figsize=(18,12))
     E *= 10**3
@@ -135,30 +141,30 @@ def run(elo=-2, ehi=8):
     print(' Swave fraction {:.2f}'.format(np.sum(I['Swave']) / np.sum(I['DDpi'])))
     ymax = np.max(I['DDpi'])
     # cax.set(xlabel=r'$E$ (MeV)', ylim=(0, 1.01), xlim=(E[0], E[-1]))
-    cax.set(xlabel=r'$E$ (MeV)', ylim=(0, 1.01), xlim=(E[0], 5))
+    cax.set(xlabel=r'$E$ (MeV)', ylim=(0, 1.01), xlim=(E[0], 15))
     cax.grid()
     cax.plot(E, I['DDpi']  / ymax, label=r'$D^0D^0\pi^+$')
-    if not hide_invisible:
-        cax.plot(E, I['DDpi0'] / ymax, label=r'$D^0D^+\pi^0$')
-        cax.plot(E, I['Swave'] / ymax, label=r'$D^0D^0$ $S$-wave')
-        cax.plot(E, I['DDgam'] / ymax, label=r'$D^0D^+\gamma$')
-        if include_pwave:
-            cax.plot(E, I['Pwave'] / ymax, label=r'$D^0D^+$ $P$-wave')
+    cax.plot(E, I['DDpi0'] / ymax, label=r'$D^0D^+\pi^0$')
+    cax.plot(E, I['DDgam'] / ymax, label=r'$D^0D^+\gamma$')
+    # if not hide_invisible:
+    #     cax.plot(E, I['Swave'] / ymax, label=r'$D^0D^0$ $S$-wave')
+    #     if include_pwave:
+    #         cax.plot(E, I['Pwave'] / ymax, label=r'$D^0D^+$ $P$-wave')
     cax.legend(loc='best', fontsize=16)
 
     # Energy w/ smearing
     cax = ax[1,0]
     ymax = np.max(I['DDpiS'])
     # cax.set(xlabel=r'$E$ (MeV)', ylim=(0, 1.01), xlim=(E[0], E[-1]))
-    cax.set(xlabel=r'$E$ (MeV)', ylim=(0, 1.01), xlim=(E[0], 5))
+    cax.set(xlabel=r'$E$ (MeV)', ylim=(0, 1.01), xlim=(E[0], 15))
     cax.grid()
     cax.plot(E, I['DDpiS']  / ymax, label=r'$D^0D^0\pi^+$')
+    cax.plot(E, I['DDpi0S'] / ymax, label=r'$D^0D^+\pi^0$')
     if not hide_invisible:
-        cax.plot(E, I['DDpi0S'] / ymax, label=r'$D^0D^+\pi^0$')
         # cax.plot(E, I['DDgamS'] / ymax, label=r'$D^0D^+\gamma$')
+        cax.plot(E, I['SwaveS'] / ymax, label=r'$D^0D^0$ $S$-wave')
         if include_pwave:
             cax.plot(E, I['PwaveS'] / ymax, label=r'$D^0D^+$ $P$-wave')
-        cax.plot(E, I['SwaveS'] / ymax, label=r'$D^0D^0$ $S$-wave')
     cax.legend(loc='best', fontsize=16)
 
     # m(DD) w/o smearing
@@ -177,8 +183,7 @@ def run(elo=-2, ehi=8):
     cax.plot(tddspace[0], pdndn   / ymax,        label=r'$D^0D^0$')
     cax.plot(tddspace[1], pdndppi / ymax, ':',   label=r'$D^0D^+(\pi^0)$')
     cax.plot(tddspace[2], pdndpga / ymax, '--' , label=r'$D^0D^+(\gamma)$')
-    if include_pwave:
-        cax.plot(tddspace[3], pdndppw / ymax, '--' , label=r'$D^0D^+$ $P$-wave')
+    cax.plot(tddspace[3], pdndppw / ymax, '--' , label=r'$D^0D^+$ $P$-wave')
     cax.plot(tddspace[4], pdndnsw / ymax, '--' , label=r'$D^0D^0$ $S$-wave')
     cax.plot(x, y / ymax, label=r'$D^0D^+ total$')
 

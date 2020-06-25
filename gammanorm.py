@@ -17,8 +17,8 @@ from lib.dndpgam import DnDpGam
 
 def getespec(emin=3, emax=10):
     """ """
-    N = 128
-    bins=256
+    N = 64
+    bins=1024
     E = np.linspace(emin, emax, N)*10**-3
 
     pdf = [
@@ -63,13 +63,16 @@ def getespec(emin=3, emax=10):
         plt.savefig(f'plots/gammanorm.{ext}')
 
     plt.figure()
-    plt.plot(E, I[3], label=r'$\Gamma(D^{*0}\to D^0\gamma)$')
     plt.plot(E, I[2], label=r'$\Gamma(D^{*0}\to D^0\pi^0)$')
+    plt.plot(E, I[3], label=r'$\Gamma(D^{*0}\to D^0\gamma)$')
     plt.xlim(E[0], E[-1])
     plt.legend(loc='best', fontsize=16)
     plt.xlabel(r'$E$ (MeV)', fontsize=18)
     plt.tight_layout()
     plt.grid()
+
+    for ext in ['png', 'pdf']:
+        plt.savefig(f'plots/gammanorm_pi0_gam.{ext}')
 
     plt.show()
 

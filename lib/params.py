@@ -2,8 +2,9 @@
 
 import numpy as np
 import matplotlib
-matplotlib.rc('xtick', labelsize=16)
-matplotlib.rc('ytick', labelsize=16)
+matplotlib.rc('xtick', labelsize=14)
+matplotlib.rc('ytick', labelsize=14)
+matplotlib.rc('font', size=16)
 
 mdn    = 1.86484
 dmdp   = 0.004822
@@ -72,8 +73,8 @@ GammaScale = 16.365e-3
 interf_dndstp_dpdstn = True  # Turn on interference between D*0D+ and D*+D0 in the D0D+pi0 channel
 include_dstndp   = True  # if False the [D*0 -> D0 pi0]D+ amplitude is excluded
 include_dstpdn   = True  # if False the [D*+ -> D+ pi0]D0 amplitude is excluded
-include_dd_pwave = True
-include_dd_swave = True
+include_dd_pwave = False
+include_dd_swave = False
 alpha_pwave = 0.
 norm_pwave = 0.8*10**11
 norm_swave = 0.07*10**6

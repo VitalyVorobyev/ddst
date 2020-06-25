@@ -38,20 +38,23 @@ def dndppin(E):
     """ D0 D+ pi0 Dalitz plot and projections """
     E *= 1e-3
 
-    # pdf = DnDpPin(gs, gt, E, channels=[False, False, True])
-    pdf = DnDpPin(gs, gt, E, channels=[True, True, True])
+    logplot = True
+    pwave = False
+    dstp = True
+    dstn = True
+
+    pdf = DnDpPin(gs, gt, E, channels=[dstp, dstn, pwave])
     _, axs = plt.subplots(1, 4, figsize=(16,4))
 
-    logplot = True
-    dpi_dpi_plot(axs[0], pdf, logplot=logplot)
-    dd_plot(  axs[1], pdf, True)
+    dnpi_dppi_plot(axs[0], pdf, logplot=logplot)
+    dd_plot(  axs[1], pdf, lbl='D^0D^+', sqrt=True)
     dnpi_plot(axs[2], pdf, True)
     dppi_plot(axs[3], pdf, True)
 
     plt.tight_layout()
 
     for ext in ['png', 'pdf']:
-        plt.savefig(f'plots/dp_dndppin_{E*10**3:.1f}.{ext}')
+        plt.savefig(f'plots/dp_dndppin_{E*10**3:.1f}_{dstp}_{dstn}_{pwave}.{ext}')
 
     plt.show()
 
@@ -60,20 +63,21 @@ def dndnpip(E):
     """ D0 D0 pi+ Dalitz plot and projections """
     E *= 1e-3
 
-    # pdf = DnDnPip(gs, gt, E, [False, True])
-    pdf = DnDnPip(gs, gt, E, [True, True])
-    # pdf = DnDnPip(gs, gt, E, channels=[True, False])
+    swave = False
+    resonance = True
+
+    pdf = DnDnPip(gs, gt, E, [resonance, swave])
     _, axs = plt.subplots(1, 4, figsize=(16,4))
 
-    dpi_dpi_plot(axs[0], pdf, logplot=False)
-    dd_plot(     axs[1], pdf, sqrt=True)
+    dnpi_dnpi_plot(axs[0], pdf, logplot=True)
+    dd_plot(     axs[1], pdf, lbl='D^0D^0', sqrt=True)
     dpi_lo_plot( axs[2], pdf, sqrt=True)
     dpi_hi_plot( axs[3], pdf, sqrt=True)
 
     plt.tight_layout()
 
     for ext in ['png', 'pdf']:
-        plt.savefig(f'plots/dp_dndnpip_{E*10**3:.1f}.{ext}')
+        plt.savefig(f'plots/dp_dndnpip_{E*10**3:.1f}_{resonance}_{swave}.{ext}')
 
     plt.show()
 

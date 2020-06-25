@@ -38,7 +38,11 @@ def run(elo=-0.5, ehi=0.0):
         r1 = r[0]
         r2 = 0
 
+
     print(f'gs {gs.real*10**3:.1f} + i{gs.imag*10**3:.1f} MeV, gs {gt.real*10**3:.1f} + i{gt.imag*10**3:.1f} MeV, fwhw = {(r2-r1)*10**3:.3f} keV')
+    print(f'Maximum at {E[np.argmax(I)]:.2f} MeV')
+    print(f'gs {gs.real*10**3:.1f} + i{gs.imag*10**3:.1f} MeV, gs {gt.real*10**3:.1f} + i{gt.imag*10**3:.1f} MeV, fwhw = {(r2-r1)*10**3:.3f} keV')
+
     plt.figure(figsize=(8, 5))
     plt.plot(E, I / np.max(I))
     plt.axvspan(r1, r2, facecolor='orange', alpha=0.2)
