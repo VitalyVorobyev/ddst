@@ -31,10 +31,10 @@ def getespec(emin=3, emax=10):
     I = [np.zeros(N) for _ in pdf]
 
     for idx, energy in enumerate(E):
-        print('E {:.3f} MeV'.format(energy*10**3))
+        print(f'E {energy*10**3:.3f} MeV ({idx}/{E.shape[0]})')
         for i, p, g in zip(I, pdf, grid):
             p.setE(energy)
-            p.t1, p.t2, p.t = 1, 1, 1
+            p.t1, p.t2, p.t, p.tin = 1, 1, 1, 1
             i[idx] = p.integral(grid=g)
 
     gam_over_pi0 = I[3][-1] / I[2][-1]
@@ -83,6 +83,8 @@ def getespec(emin=3, emax=10):
     plt.show()
 
 if __name__ == '__main__':
-    elo, ehi = [float(x) for x in sys.argv[1:]]
-    getespec(elo, ehi)
-
+    try:
+        elo, ehi = map(float, sys.argv[1:])
+        getespec(elo, ehi)
+    except ValueError:
+        print('Usage: ./gammanorm.py [E low] [E high]')
