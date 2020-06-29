@@ -4,9 +4,6 @@
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib
-matplotlib.rc('xtick', labelsize=16)
-matplotlib.rc('ytick', labelsize=16)
 
 from lib.params import gs, gt
 from lib.params import br_dstn_dngam, br_dstn_dnpin
@@ -48,7 +45,8 @@ def getespec(emin=3, emax=10):
 
     E *= 10**3
     figax1 = plt.subplots(figsize=(8,6))
-    put_plot_on_axis(figax=figax1, xlabel=r'$E$ (MeV)', xlim=(E[0], E[-1]), saveas='gammanorm',
+    put_plot_on_axis(figax=figax1, xlabel=r'$E$ (MeV)', xlim=(E[0], E[-1]),
+        saveas='gammanorm',
         data = [
             [
                 E, I[0] / I[1],
@@ -74,7 +72,8 @@ def getespec(emin=3, emax=10):
     )
 
     figax2 = plt.subplots(figsize=(8,6))
-    put_plot_on_axis(figax=figax2, xlabel=r'$E$ (MeV)', xlim=(E[0], E[-1]), saveas='gammanorm_pi0_gam',
+    put_plot_on_axis(figax=figax2, xlabel=r'$E$ (MeV)', xlim=(E[0], E[-1]),
+        saveas='gammanorm_pi0_gam',
         data = [
             [E, I[2], r'$\Gamma(D^{*0}\to D^0\pi^0)$', {}],
             [E, I[3], r'$\Gamma(D^{*0}\to D^0\gamma)$', {}]
