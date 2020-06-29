@@ -22,7 +22,7 @@ def pdf_dstn_dn_pin(s):
 
 def pdf_dstn_dn_gam(s):
     """ """
-    return two_body_momentum(s, mdnSq, 0)**1 * MagSq(RbwDstn(s))
+    return two_body_momentum(s, mdnSq, 0)**3 * MagSq(RbwDstn(s)) * GammaScale
 
 def run(nsigma=10):
     elo = mdstn - nsigma*gamma_star_n
@@ -39,9 +39,10 @@ def run(nsigma=10):
 
     # Ipin / gamma_star_n_dnpin = scale * Igam / gamma_star_n_dngam
     gam_scale = Ipin / gamma_star_n_dnpin * gamma_star_n_dngam / Igam
-    print(f'gam fact {gam_scale*10**3:.3f}e-3')
     # gamma_star_n_dnpin = Ipin * absolute_factor
     absolute_factor = gamma_star_n_dnpin / Ipin
+    
+    print(f'gam fact {gam_scale*10**3:.3f}e-3')
     print(f'abs fact {absolute_factor*10**3:.3f}e-3')
 
     ppin *= absolute_factor
