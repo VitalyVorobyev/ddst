@@ -3,9 +3,6 @@
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib
-matplotlib.rc('xtick', labelsize=14)
-matplotlib.rc('ytick', labelsize=14)
 
 from lib.params import gamma_star_n_dngam, gamma_star_n_dnpin, gamma_star_n
 from lib.params import mdstn, mdn, mpin, GammaScale
@@ -52,7 +49,7 @@ def run(nsigma=10):
     plt.figure(figsize=(8,6))
     plt.plot(E, ppin, label=r'$D^0\pi^0$')
     plt.plot(E, pgam, label=r'$D^0\gamma$')
-    plt.xlabel(r'$\Delta E$ (keV)', fontsize=16)
+    plt.xlabel(r'$\Delta E$ (keV)', fontsize=18)
     plt.ylim([0, 1.05*max(ppin)])
     plt.xlim([E[0], E[-1]])
     plt.grid()

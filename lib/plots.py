@@ -4,6 +4,22 @@ from .params import DalitzNBins, mdn, mpip, mdp, mpin
 
 import numpy as np
 
+def put_plot_on_axis(figax, data, saveas=None, **kwargs):
+    """ """
+    fig, ax = figax
+    for x, y, lbl, pdict in data:
+        ax.plot(x, y, label=lbl, **pdict)
+
+    ax.set(**kwargs)
+    ax.legend(loc='best', fontsize=16)
+    ax.grid()
+    fig.tight_layout()
+
+    if saveas:
+        for ext in ['png', 'pdf']:
+            fig.savefig(f'plots/{saveas}.{ext}')
+
+
 #### Common ####
 def dd_plot(ax, pdf, lbl, sqrt=True):
     """ D0D{0,+} kinetic energy spectrum
