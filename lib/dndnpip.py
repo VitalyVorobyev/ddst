@@ -2,11 +2,10 @@
 
 import sys
 import numpy as np
-import matplotlib.pyplot as plt
 
 from .params import gs, gt, mdn, mdn, mpip, mdstp, gamma_star_p, DalitzNBins
 from .params import phiins, include_dstndp, include_dd_swave, Rin, g1, g2, norm_swave
-from .dalitzphsp import DalitzPhsp
+from .dalitzphsp import DalitzPhsp, Kibble
 from .lineshape import TMtx, RelativisticBreitWigner, MagSq
 
 
@@ -15,13 +14,15 @@ class DnDnPip(DalitzPhsp):
 
     verb=False
 
-    def __init__(self, gs, gt, E, channels=[include_dstndp, include_dd_swave]):
+    def __init__(self, gs, gt, E=0, channels=[include_dstndp, include_dd_swave]):
         super(DnDnPip, self).__init__(E + TMtx.thr, mdn, mdn, mpip)
         self.tmtx = TMtx(gs, gt)
         self.setE(E)
         self.bwdstp = lambda s: RelativisticBreitWigner(s, mdstp, gamma_star_p)
         self.a1 = self.dstn_ampl if channels[0] else lambda x,y: 0
         self.a2 = self.inelastic if channels[1] else lambda: 0
+        self.isInPhsp = lambda s, md1pisq, mddsq:\
+            Kibble(s, md1pisq, mddsq, mdn**2, mdn**2, mpip**2)
 
 
     def setE(self, E):
@@ -46,6 +47,35 @@ class DnDnPip(DalitzPhsp):
 
     def calc(self, mdd, md1pi):
         return 2*mpip*self.KineC(mdd) * MagSq(self.a1(mdd, md1pi) + self.a2())
+
+
+    def pdf3d(self, E, mddsq, md1pisq):
+        """ 3D PDF """
+        # phase-space mask
+        mMo = E + TMtx.thr
+        s = mMo**2
+        mask = self.isInPhsp(s, mddsq, md1pisq)
+        assert np.any(mask)
+
+        result = np.zeros(mask.shape, dtype=float)
+
+        mMov, Ev, sv, mddsqv, md1pisqv = [x[mask] for x in [mMo, E, s, mddsq, md1pisq]]
+
+        # pre-calculations
+        md2pisqv = self.mijsq(sv, mddsqv, md1pisqv)
+
+        # T-matrix factor
+        tv = np.sum(self.tmtx.vec(Ev)[0])
+
+        # Dalitz plot amplitude
+        amp = tv * (self.bwdstp(md1pisqv) + self.bwdstp(md2pisqv))
+
+        # pion momentum squared
+        kine = 2 * mpip * self.iKineFramejk(mMov, mpip, mddsqv)
+
+        # Full amplitude
+        result[mask] = kine * MagSq(amp)
+        return result * 10**-12
 
 
     def __call__(self, mdd, md1pi):

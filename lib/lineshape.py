@@ -27,10 +27,9 @@ def RbwDstn(s):
 def MagSq(z):
     return z.real**2 + z.imag**2
 
-class TMtx(object):
+class TMtx():
     """ T-matrix for D*0D+ D*+D0 channels """
     mu = rmass(mdn, mdstp)
-    mu2 = rmass(mdp, mdstn)
     thr = mdn + mdstp
     d = [mdn + mdstp - thr, mdp + mdstn - thr]
 
@@ -64,34 +63,11 @@ class TMtx(object):
             [self.t12(),   self.t11(k1)]
         ]) / self.det(k1,k2)
 
-def main():
-    """ Unit test """
-    print('Lower threshold {:.3f} MeV'.format(TMtx.thr*10**3))
-    print(' delta Threshold {:.3f} MeV'.format((TMtx.d[1] - TMtx.d[0])*10**3))
-
-    t = TMtx(gs, gt)
-    E = -0.225*10**-3
-    k1 = t.k(E, 0)
-    k2 = t.k(E, 1)
-    print(f'k1 {k1*10**3}')
-    print(f'k2 {k2*10**3}')
-    print(f'det {t.det(k1, k2)*10**6}')
-    print(f't11 {t.t11(k2)*10**3}')
-    print(f't22 {t.t11(k1)*10**3}')
-    print(f't12 {t.t12()*10**3}')
-    print(f'2mu {t.mu*2}')
-    print(MagSq((t.t11(k2) + t.t12()) / t.det(k1, k2)) * 10**-6)
-
-    import matplotlib.pyplot as plt
-    plt.figure()
-    E = np.linspace(mdn + mpin, mdstn+2e-3)
-    plt.plot((E - mdstn)*10**3, DstnWidth(E**2)*10**6)
-    plt.xlabel('E (MeV)', fontsize=14)
-    plt.ylabel('D*0 width (keV)', fontsize=14)
-    plt.ylim(0, 80)
-    plt.grid()
-    plt.tight_layout()
-    plt.show()
-
-if __name__ == '__main__':
-    main()
+    def vec(self, E):
+        """ """
+        k1, k2 = [self.k(E, idx) for idx in [0,1]]
+        offdiag = np.ones(E.shape) * self.t12()
+        return np.array([
+            [self.t11(k2), offdiag],
+            [offdiag     , self.t11(k1)]
+        ]) / self.det(k1,k2)

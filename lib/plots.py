@@ -11,7 +11,7 @@ def put_plot_on_axis(figax, data, saveas=None, **kwargs):
         ax.plot(x, y, label=lbl, **pdict)
 
     ax.set(**kwargs)
-    ax.legend(loc='best', fontsize=16)
+    ax.legend(loc='best', fontsize=18)
     ax.grid()
     fig.tight_layout()
 

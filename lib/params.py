@@ -2,9 +2,9 @@
 
 import numpy as np
 import matplotlib
-matplotlib.rc('xtick', labelsize=14)
-matplotlib.rc('ytick', labelsize=14)
-matplotlib.rc('font', size=16)
+matplotlib.rc('xtick', labelsize=16)
+matplotlib.rc('ytick', labelsize=16)
+matplotlib.rc('font', size=18)
 
 mdn    = 1.86484
 dmdp   = 0.004822

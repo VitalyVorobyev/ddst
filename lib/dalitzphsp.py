@@ -8,9 +8,16 @@ def Kallen(Msq, m1sq, m2sq):
 
 def two_body_momentum(Msq, m1sq, m2sq):
     """ """
-    return 0.5 * np.sqrt(Kallen(Msq, m1sq, m2sq)) / np.sqrt(Msq)
+    return 0.5 * np.sqrt(Kallen(Msq, m1sq, m2sq) / Msq)
 
-class DalitzPhsp(object):
+
+def Kibble(s, s3, s2, m1sq, m2sq, m3sq):
+    """ If inside Dalitz phase space """
+    return np.abs(2. * s3 * (s2 - m1sq - m3sq) - (s3 + m1sq - m2sq) * (s - s3 - m3sq)) <\
+           np.sqrt(Kallen(s, m3sq, s3) * Kallen(s3, m1sq, m2sq))
+
+
+class DalitzPhsp():
     """ A Dalitz phase space tool. Only required features implemented """
 
     def __init__(self, M, A, B, C):
@@ -148,3 +155,12 @@ class DalitzPhsp(object):
     def KineC(self, mABsq):
         """ Kinetic energy of C from mABsq """
         return self.kine(self.da[2], mABsq)
+
+    @staticmethod
+    def iKineFramejk(mMo, mi, mjksq):
+        """ i'th kine energy in the (jk) frame """
+        return ((mMo - mi)**2 - mjksq) / (2. * mMo)
+
+    def mijsq(self, mMosq, miksq, mjksq):
+        """ m(ij)^2 given m(ik)^2 and m(jk)^2 """
+        return mMosq + self.daSq.sum() - miksq - mjksq
