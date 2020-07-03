@@ -7,7 +7,7 @@ class MCProducer():
 
     def __init__(self, pdf, phsp, maj=None):
         """  """
-        self.pdf = pdf
+        self.pdf = lambda x: pdf(x).reshape(-1,1)
         self.phsp = phsp
         self.ndim = len(phsp)
         self.chunk_size = 10**6
@@ -23,7 +23,15 @@ class MCProducer():
             data = self.get_chunk()
             xi = self.get_xi()
             y = self.pdf(data)
-            result.append(data[y>xi].reshape(-1, self.ndim))
+
+            ymax = np.max(y)
+            if ymax > self.maj:
+                print('mak update, starting over...')
+                self.maj = 1.1*ymax
+                return self.__call__(chunks)
+
+            maks = (y>xi).flatten()
+            result.append(data[maks])
 
             current = result[-1].shape[0]
             total += current
@@ -38,8 +46,7 @@ class MCProducer():
         data = np.random.random((self.chunk_size, self.ndim))
 
         # Rescale each dimension
-        for i in range(self.ndim):
-            rng = self.phsp[i]
+        for i, rng in enumerate(self.phsp):
             data[:,i] = rng[0] + data[:,i] * (rng[1] - rng[0])
 
         return data

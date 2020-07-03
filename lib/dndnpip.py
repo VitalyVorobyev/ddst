@@ -54,6 +54,8 @@ class DnDnPip(DalitzPhsp):
         # phase-space mask
         mMo = E + TMtx.thr
         s = mMo**2
+        # mMo = np.sqrt(s)
+        # E = mMo - TMtx.thr
         mask = self.isInPhsp(s, mddsq, md1pisq)
         assert np.any(mask)
 
@@ -65,7 +67,7 @@ class DnDnPip(DalitzPhsp):
         md2pisqv = self.mijsq(sv, mddsqv, md1pisqv)
 
         # T-matrix factor
-        tv = np.sum(self.tmtx.vec(Ev)[0])
+        tv = np.sum(self.tmtx.vec(Ev)[0], axis=0)
 
         # Dalitz plot amplitude
         amp = tv * (self.bwdstp(md1pisqv) + self.bwdstp(md2pisqv))
@@ -75,7 +77,7 @@ class DnDnPip(DalitzPhsp):
 
         # Full amplitude
         result[mask] = kine * MagSq(amp)
-        return result * 10**-12
+        return result
 
 
     def __call__(self, mdd, md1pi):
