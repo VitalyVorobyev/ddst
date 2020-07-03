@@ -75,7 +75,7 @@ def phsp_plot(ranges):
     plt.show()
 
 if __name__ == '__main__':
-    # try:
+    try:
         ranges = (
             [-2.5, 15],  # energy
             22,  # Tdd max
@@ -89,5 +89,5 @@ if __name__ == '__main__':
         # gen_ddpip_3d(ranges, chunks=chunks)
         gen_ddpip_5d(ranges, chunks=chunks)
 
-    # except IndexError:
-        # print(f'Usage: ./runtoymc [chunks]')
+    except IndexError:
+        print(f'Usage: ./runtoymc [chunks]')
