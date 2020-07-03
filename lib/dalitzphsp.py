@@ -4,7 +4,7 @@ import numpy as np
 
 def Kallen(Msq, m1sq, m2sq):
     """ Kallen's triangle function """
-    return (Msq - m1sq - m2sq)**2 - 4*m1sq*m2sq
+    return np.clip((Msq - m1sq - m2sq)**2 - 4*m1sq*m2sq, 0, a_max=None)
 
 def two_body_momentum(Msq, m1sq, m2sq):
     """ """

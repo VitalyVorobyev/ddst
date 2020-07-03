@@ -14,7 +14,7 @@ class DnDnPip(DalitzPhsp):
 
     verb=False
 
-    def __init__(self, gs, gt, E=0, channels=[include_dstndp, include_dd_swave]):
+    def __init__(self, gs=gs, gt=gt, E=0, channels=[include_dstndp, include_dd_swave]):
         super(DnDnPip, self).__init__(E + TMtx.thr, mdn, mdn, mpip)
         self.tmtx = TMtx(gs, gt)
         self.setE(E)
@@ -49,25 +49,30 @@ class DnDnPip(DalitzPhsp):
         return 2*mpip*self.KineC(mdd) * MagSq(self.a1(mdd, md1pi) + self.a2())
 
 
-    def pdf3d(self, E, mddsq, md1pisq):
-        """ 3D PDF """
+    def pdf(self, evts):
+        """ 3D or 5D PDF """
         # phase-space mask
+        E, mddsq, md1pisq = [evts[:,i] for i in range(3)]
         mMo = E + TMtx.thr
         s = mMo**2
-        # mMo = np.sqrt(s)
-        # E = mMo - TMtx.thr
         mask = self.isInPhsp(s, mddsq, md1pisq)
         assert np.any(mask)
 
         result = np.zeros(mask.shape, dtype=float)
 
         mMov, Ev, sv, mddsqv, md1pisqv = [x[mask] for x in [mMo, E, s, mddsq, md1pisq]]
+        
+        if evts.shape[1] == 5:
+            gsre, gsim = [evts[mask,i+3] for i in range(2)]
+            gsv = gsre + 1j*gsim
+            gtv = gt.real + 1j*gsim
+            self.tmtx.set_gs_gt(gsv, gtv)
 
         # pre-calculations
         md2pisqv = self.mijsq(sv, mddsqv, md1pisqv)
 
         # T-matrix factor
-        tv = np.sum(self.tmtx.vec(Ev)[0], axis=0)
+        tv = np.sum(self.tmtx(Ev)[0], axis=0)
 
         # Dalitz plot amplitude
         amp = tv * (self.bwdstp(md1pisqv) + self.bwdstp(md2pisqv))

@@ -10,7 +10,7 @@ class MCProducer():
         self.pdf = lambda x: pdf(x).reshape(-1,1)
         self.phsp = phsp
         self.ndim = len(phsp)
-        self.chunk_size = 10**6
+        self.chunk_size = 10**7
         self.maj = self.assess_maj() if maj is None else maj
         print(f'maj: {self.maj:.2f}')
 
@@ -26,7 +26,7 @@ class MCProducer():
 
             ymax = np.max(y)
             if ymax > self.maj:
-                print('mak update, starting over...')
+                print(f'maj update {self.maj:.2f} -> {1.1*ymax:.2f}, starting over...')
                 self.maj = 1.1*ymax
                 return self.__call__(chunks)
 
@@ -35,7 +35,7 @@ class MCProducer():
 
             current = result[-1].shape[0]
             total += current
-            print(f'{i}/{chunks}: {current:5d} events (total {total:7d})')
+            print(f'{i:4d}/{chunks}: {current:5d} events (total {total:7d})')
 
         return np.vstack(result)
 
@@ -60,4 +60,4 @@ class MCProducer():
     def assess_maj(self):
         """ """
         print('assessing majorant...')
-        return 1.1*max([np.max(self.pdf(self.get_chunk())) for _ in range(10)])
+        return 1.1*max([np.max(self.pdf(self.get_chunk())) for _ in range(2)])

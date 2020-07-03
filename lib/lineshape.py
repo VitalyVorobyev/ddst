@@ -34,6 +34,11 @@ class TMtx():
     d = [mdn + mdstp - thr, mdp + mdstn - thr]
 
     def __init__(self, gs, gt):
+        """ gs, gt can be float or np.array """
+        self.set_gs_gt(gs, gt)
+
+    def set_gs_gt(self, gs, gt):
+        """ """
         self.gs, self.gt = gs, gt
         self.gsumm = gt + gs
         self.gdiff = gt - gs
@@ -58,16 +63,12 @@ class TMtx():
     def __call__(self, E):
         """ """
         k1, k2 = [self.k(E, idx) for idx in [0,1]]
-        return np.array([
-            [self.t11(k2), self.t12()],
-            [self.t12(),   self.t11(k1)]
-        ]) / self.det(k1,k2)
 
-    def vec(self, E):
-        """ """
-        k1, k2 = [self.k(E, idx) for idx in [0,1]]
-        offdiag = np.ones(E.shape) * self.t12()
+        offdiag = self.t12()
+        if not isinstance(E, (int, float)):
+            offdiag = offdiag * np.ones(len(E))
+
         return np.array([
             [self.t11(k2), offdiag],
-            [offdiag     , self.t11(k1)]
+            [offdiag, self.t11(k1)]
         ]) / self.det(k1,k2)
