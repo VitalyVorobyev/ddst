@@ -13,6 +13,7 @@ is considered. T-matrix-based approach with two coupled elastic channels (`D0 D*
 * [`numpy`](numpy.org)
 * [`matplotlib`](matplotlib.org)
 * [`scipy`](scipy.org)
+* [`jax`](https://jax.readthedocs.io)
 
 ## [lib](lib) directory
 

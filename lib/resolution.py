@@ -3,6 +3,8 @@
 import numpy as np
 from scipy.interpolate import interp1d
 from scipy.stats import norm
+import jax
+import jax.numpy as jnp
 
 import matplotlib.pyplot as plt
 
@@ -17,17 +19,17 @@ def spline(x, y, newx):
 
 def smdstp(tpi=6.6e-3):
     """ sigma(D*+) """
-    return np.sqrt(2*tpi/mpip)*sigma_ppi
+    return jnp.sqrt(2*tpi/mpip)*sigma_ppi
 
-C1 = (2*mdn) / (2*mdn+mpip)
 def smddpi(e, tdd):
     """ sigma(m_DDpi) """
+    C1 = (2*mdn) / (2*mdn+mpip)
     tpi = e - mdn + mdstp - mpip
-    return C1 * np.sqrt(0.5*tdd/mdn * smdSq + 2*tpi/mpip*sppiSq)
+    return C1 * jnp.sqrt(0.5*tdd/mdn * smdSq + 2*tpi/mpip*sppiSq)
 
 def stdd(tdd):
     """ sigma(m_DD) """
-    return np.sqrt(2*tdd/mdn)*sigma_mdn
+    return jnp.sqrt(2*tdd/mdn)*sigma_mdn
 
 def smear_tdd(tdd, p, dots=250):
     """ """
@@ -77,35 +79,19 @@ def smear_e_const(e, ev, tdd=None, ptdd=None, dots=250, sigma=0.00035):
     """ """
     return (norm.pdf(ev, e, sigma), sigma)
 
-def main():
-    """ Unit test """
-    dot1, dot2 = 250, 250
-    tdd = np.linspace(0, 8, dot1)[1:]*10**-3
-    p = norm.pdf(tdd, 0.00, 0.002)
-    p /= np.sum(p) / dot1 * dot2
-    x, y = smear_tdd(tdd, p, dot2)
-    # plt.plot(tdd*10**3, stdd(tdd)*10**3)
-    # plt.show()
-    plt.plot(tdd, p)
-    plt.plot(x, y)
-    print(np.sum(p))
-    print(np.sum(y))
-    plt.show()
+@jax.vmap
+@jax.jit
+def sample(events: np.ndarray) -> (np.ndarray):
+    """ Resolution sampler for MC events """
+    # Should be (E (MeV), m^2(DD) (GeV^2), m^2(Dpi) (GeV^2))
+    e = events[0] * 10**-3
+    tdd = jnp.sqrt(events[1]) - 2*mdn
+    mdpi = jnp.sqrt(events[2])
 
-if __name__ == '__main__':
-    pass
-    # tdd = np.linspace(0, 8, 25)[1:]*10**-3
-    # print(smddpi(tdd)*10**3)
-    # for x in range(6):
-    #     x = (x+1)*10**-3
-    #     print(x*10**3, stdd(x)*10**3)
-    #     lbl = 'T: {:.0f} MeV, S: {:.2f} MeV'.format(x*10**3, stdd(x)*10**3)
-    #     plt.plot(tdd*10**3, norm.pdf(tdd, x, stdd(x)), label=lbl)
-    # plt.xlim(0, 8)
-    # plt.ylim(0, 1500)
-    # plt.xlabel(r'$T_{DD}$, MeV', fontsize=16)
-    # plt.legend(loc='best')
-    # plt.grid()
-    # plt.tight_layout()
-    # plt.show()
-    # main()
+    rng = jax.random.PRNGKey(1)
+    rng, key1, key2, key3 = jax.random.split(rng, 4)
+    sm_e = e + smddpi(e, tdd) * jax.random.normal(key1)
+    sm_tdd = tdd + stdd(tdd) * jax.random.normal(key2)
+    sm_mdpi = mdpi + smdstp() * jax.random.normal(key3)
+
+    return jnp.array([sm_e * 10**3, (sm_tdd + 2*mdn)**2, sm_mdpi**2])
