@@ -23,9 +23,9 @@ def smdstp(tpi=6.6e-3):
 
 def smddpi(e, tdd):
     """ sigma(m_DDpi) """
-    C1 = (2*mdn) / (2*mdn+mpip)
     tpi = e - mdn + mdstp - mpip
-    return C1 * jnp.sqrt(0.5*tdd/mdn * smdSq + 2*tpi/mpip*sppiSq)
+    return (2*mdn) / (2*mdn+mpip) *\
+        jnp.sqrt(0.5*tdd/mdn * smdSq + 2*tpi/mpip*sppiSq)
 
 def stdd(tdd):
     """ sigma(m_DD) """
@@ -79,19 +79,20 @@ def smear_e_const(e, ev, tdd=None, ptdd=None, dots=250, sigma=0.00035):
     """ """
     return (norm.pdf(ev, e, sigma), sigma)
 
-@jax.vmap
 @jax.jit
 def sample(events: np.ndarray) -> (np.ndarray):
-    """ Resolution sampler for MC events """
-    # Should be (E (MeV), m^2(DD) (GeV^2), m^2(Dpi) (GeV^2))
-    e = events[0] * 10**-3
-    tdd = jnp.sqrt(events[1]) - 2*mdn
-    mdpi = jnp.sqrt(events[2])
+    """ Resolution sampler for MC events
+    Args:
+        - events: [E (MeV), m^2(DD) (GeV^2), m^2(Dpi) (GeV^2)]
+    """
+    e = events[:,0] * 10**-3
+    tdd = jnp.sqrt(events[:,1]) - 2*mdn
+    mdpi = jnp.sqrt(events[:,2])
 
-    rng = jax.random.PRNGKey(1)
-    rng, key1, key2, key3 = jax.random.split(rng, 4)
-    sm_e = e + smddpi(e, tdd) * jax.random.normal(key1)
-    sm_tdd = tdd + stdd(tdd) * jax.random.normal(key2)
-    sm_mdpi = mdpi + smdstp() * jax.random.normal(key3)
+    offsets = jax.random.normal(jax.random.PRNGKey(1), events.shape)
 
-    return jnp.array([sm_e * 10**3, (sm_tdd + 2*mdn)**2, sm_mdpi**2])
+    return jnp.column_stack([
+        (e + smddpi(e, tdd) * offsets[:,0]) * 10**3,
+        (tdd + stdd(tdd) * offsets[:,1] + 2*mdn)**2,
+        (mdpi + smdstp() * offsets[:,2])**2,
+    ])
