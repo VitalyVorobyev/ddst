@@ -78,8 +78,14 @@ def phsp_plot(ranges):
 
 def generate_3d_on_grid(chunks):
     """ """
-    gsre = np.array([35, 36, 37, 38,39, 40, 41, 42, 43, 44, 45, 46]) * 10**-3
-    gsim = np.array([1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9]) * 10**-3
+    # gsre = np.array([35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46]) + 0.5
+    # gsim = np.array([1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9]) + 0.05
+
+    gsre = np.array([40, 41, 42]) + 0.1
+    gsim = np.array([1.5, 1.6, 1.7]) + 0.01
+
+    gsre *= 10**-3
+    gsim *= 10**-3
 
     for re, im in product(gsre, gsim):
         print(f'generating {re*10**3:.2f} + i{im*10**3:.2f} ...')
@@ -106,10 +112,11 @@ if __name__ == '__main__':
         else:
             gsre, gsim = gs.real, gs.imag
 
-        gen_ddpip_3d(ranges, chunks=chunks,
-            igs=(gsre + 1j*gsim),
-            igt=( 25. + 1j*gsim)
-        )
+        generate_3d_on_grid(chunks=chunks)
+        # gen_ddpip_3d(ranges, chunks=chunks,
+        #     igs=(gsre + 1j*gsim),
+        #     igt=( 25. + 1j*gsim)
+        # )
 
         # gen_ddpip_5d(ranges, chunks=chunks)
 
