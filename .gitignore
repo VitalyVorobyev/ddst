@@ -6,3 +6,7 @@ data
 .ipynb_checkpoints
 mcsamples
 *.dat
+*.npz
+token.pickle
+credentials.json
+*.zip
