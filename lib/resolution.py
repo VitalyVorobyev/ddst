@@ -21,15 +21,28 @@ def smdstp(tpi=6.6e-3):
     """ sigma(D*+) """
     return jnp.sqrt(2*tpi/mpip)*sigma_ppi
 
+def kine_pi(e):
+    """ Kinetic energy of pi+ T(pi+) """
+    return e - mdn + mdstp - mpip
+
 def smddpi(e, tdd):
     """ sigma(m_DDpi) """
-    tpi = e - mdn + mdstp - mpip
     return (2*mdn) / (2*mdn+mpip) *\
-        jnp.sqrt(0.5*tdd/mdn * smdSq + 2*tpi/mpip*sppiSq)
+        jnp.sqrt(0.5*tdd/mdn * smdSq + 2*kine_pi(e)/mpip*sppiSq)
+
+def smddpi2(e, pd):
+    """ sigma(m_DDpi) in terms of p_D """
+    return smddpi(e, pd**2 / mdn)
+    # return (2*mdn) / (2*mdn+mpip) *\
+        # jnp.sqrt(0.5*pd**2/mdn**2 * smdSq + 2*kine_pi(e)/mpip*sppiSq)
 
 def stdd(tdd):
     """ sigma(m_DD) """
     return jnp.sqrt(2*tdd/mdn)*sigma_mdn
+
+def spd():
+    """ sigma(p_D) """
+    return sigma_mdn / jnp.sqrt(2)
 
 def smear_tdd(tdd, p, dots=250):
     """ """

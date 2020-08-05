@@ -10,7 +10,7 @@ from .lineshape import TMtx, RelativisticBreitWigner, MagSq
 
 
 class DnDnPip(DalitzPhsp):
-    """ The [X -> D0 [D*+ -> D0 pi+]] decay amplitude """
+    """ The [Tcc -> D0 [D*+ -> D0 pi+]] decay amplitude """
 
     verb=False
 
@@ -48,6 +48,18 @@ class DnDnPip(DalitzPhsp):
     def calc(self, mdd, md1pi):
         return 2*mpip*self.KineC(mdd) * MagSq(self.a1(mdd, md1pi) + self.a2())
 
+    def pdf_vars(self, e, pd, mdpi):
+        """ Convenience function for PDF in terms of observables
+        e: energy (MeV), pd: p(D) (MeV), mdpi: m(Dpi) (MeV) """
+        return self.pdf(np.column_stack(self.vars_to_mandelstam(e, pd, mdpi)))
+
+    def vars_to_mandelstam(self, e, pd, mdpi):
+        """ (E, p(D), m(Dpi+)) -> (E, m^2(DD), m^2(Dpi+)) """
+        return (
+            e * 10**-3,
+            (pd*10**-6 / mdn + 2*mdn)**2,
+            (mdpi * 10**-3)**2
+        )
 
     def pdf(self, evts):
         """ 3D or 5D PDF """
