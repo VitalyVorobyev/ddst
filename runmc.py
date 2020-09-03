@@ -81,8 +81,8 @@ def generate_3d_on_grid(chunks):
     # gsre = np.array([35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46]) + 0.5
     # gsim = np.array([1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9]) + 0.05
 
-    gsre = np.array([40, 41, 42]) + 0.1
-    gsim = np.array([1.5, 1.6, 1.7]) + 0.01
+    gsre = np.array([40., 41., 42.])
+    gsim = np.array([1.5, 1.6, 1.7])
 
     gsre *= 10**-3
     gsim *= 10**-3

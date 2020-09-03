@@ -4,6 +4,8 @@ import itertools
 import numpy as np
 from scipy import stats, signal
 
+from typing import Iterable
+
 from . import resolution as res
 from .params import mdn, mpip, mdstp
 
@@ -15,6 +17,24 @@ def get_resolution(e, pd):
         res.spd()*10**3, 
         res.smdstp()*10**3
     )
+
+def local_grid_1d(data: float, sigma: float,
+                  ndots: int=101, nsigma: float=5.) -> tuple:
+    data_grid = np.linspace(data - nsigma*sigma, data + nsigma*sigma, ndots)
+    delta = data_grid[1] - data_grid[0]
+    reso_grid = np.arange(-nsigma*sigma, nsigma*sigma + 0.5*delta, delta)
+    return (data_grid, reso_grid, delta)
+
+def meshdrid(lists):
+    return np.array(list(itertools.product(*lists)))
+
+def local_grid_nd(data: Iterable, sigma: Iterable,
+                  ndots: int=101, nsigma: float=5.) -> tuple:
+    grids = [local_grid_1d(x, s, ndots, nsigma) for x, s in zip(data, sigma)]
+    data_grid = meshdrid([item[0] for item in grids])
+    reso_grid = meshdrid([item[1] for item in grids])
+    delta = np.prod([item[2] for item in grids])
+    return (data_grid, reso_grid, delta)
 
 def local_resolution_grid(e, pd, mdpi, ndots=101, nsigma=5):
     """ Local grid and 3D Gaussian resolution window """
@@ -42,7 +62,7 @@ def local_resolution_grid(e, pd, mdpi, ndots=101, nsigma=5):
 def smeared_pdf(pdf, e, pd, mdpi, ndots=101):
     """ """
     _, x_full_grid, _, x_reso_grid, reso, dr =\
-        local_resolution_grid(e, pd, mdpi, ndots, 7, 5)
+        local_resolution_grid(e, pd, mdpi, ndots, 5)
     ndots_res = int(np.cbrt(x_reso_grid.shape[0]))
     reso = reso.reshape(ndots_res, ndots_res, ndots_res, 1)
     pdfval = pdf.pdf_vars(
