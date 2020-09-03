@@ -192,19 +192,6 @@ def dnpi_dppi_plot(ax, pdf, logplot=True):
     )
     ax.contour(mdnpi, mdppi, phsp, levels=1)
 
-
-def dd_dpi_plot(ax, pdf, logplot=True):
-    (mdd, mdnpi), _ = pdf.mgridABAC(500)
-    z, mask = pdf(mdd, mdnpi)
-    if logplot:
-        z = np.log(z+1.000000001)
-    phsp = np.zeros(mdd.shape)
-    phsp[mask] = 1
-    ax.contourf(mdnpi, mdd, z, cmap=None, levels=100)
-    ax.set(ylabel=r'$m(D^0D^+)$', xlabel=r'$m(D^0\pi^0)$')
-    ax.contour(mdnpi, mdd, phsp, levels=1)
-
-
 def dnpi_plot(ax, pdf, sqrt=True):
     nbins=DalitzNBins
     bins = pdf.linspaceAC(nbins)
@@ -232,6 +219,35 @@ def dppi_plot(ax, pdf, sqrt=True):
         ax.set(xlabel=lbl, ylim=(0, 1.01*np.max(mdppi)), xlim=(2.005, 2.013))
     else:
         lbl = r'$m^2(D^+\pi^0)$'
-        ax.set(xlabel=lbl, ylim=(0, 1.01*np.max(mdppi)), xlim=(bins[0], bins[-1]))
+        ax.set(xlabel=lbl, ylim=(0, 1.01*np.max(mdppi)),
+               xlim=(bins[0], bins[-1]))
     ax.grid()
     ax.plot(bins, mdppi)
+
+def draw_1d_projections(ax, e, pd, mdpi, bins=250, weights=None, alpha=None,
+                        density=False, lims=None, label=None):
+    """ Plot 1D projections fiven 3D toy MC events """
+    if not lims:
+        lims = [(-3, 10), (0, 150), (2004, 2016)]
+    labels = (r'$E (MeV)$', r'$p(D^0)$ (MeV)', r'$m(D^0pi^+)$ (MeV)')
+    for idx, data in enumerate([e, pd, mdpi]):
+        ax[idx].hist(data, bins=bins, weights=weights, alpha=alpha,
+                     density=density, range=lims[idx], label=label)
+        if label:
+            ax[idx].legend()
+        ax[idx].grid()
+        ax[idx].set_xlabel(labels[idx])
+
+def draw_pdf_projections(ax, x, y, alpha=None, label=None):
+    """ Plot 1D projection of 3D PDF given it's values for a
+        regular 3D meshgrid """
+    labels = (r'$E (MeV)$', r'$p(D^0)$ (MeV)', r'$m(D^0pi^+)$ (MeV)')
+    dx = [item[1] - item[0] for item in x]
+    projs = [y.sum(axis=atup) * dx[atup[0]] * dx[atup[1]]
+        for atup in [(1,2), (0,2), (0,1)]]
+    for idx, (lbl, xi, pro) in enumerate(zip(labels, x, projs)):
+        ax[idx].plot(xi, pro, alpha=alpha, label=label)
+        if label:
+            ax[idx].legend()
+        ax[idx].grid()
+        ax[idx].set_xlabel(lbl)

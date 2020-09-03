@@ -109,3 +109,7 @@ def sample(events: np.ndarray) -> (np.ndarray):
         (tdd + stdd(tdd) * offsets[:,1] + 2*mdn)**2,
         (mdpi + smdstp() * offsets[:,2])**2,
     ])
+
+def get_resolution(e, pd):
+    """ """
+    return (smddpi2(e / 10**3, pd / 10**3)*10**3, spd()*10**3, smdstp()*10**3)

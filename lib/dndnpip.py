@@ -7,6 +7,7 @@ from .params import gs, gt, mdn, mdn, mpip, mdstp, gamma_star_p, DalitzNBins
 from .params import phiins, include_dstndp, include_dd_swave, Rin, g1, g2, norm_swave
 from .dalitzphsp import DalitzPhsp, Kibble
 from .lineshape import TMtx, RelativisticBreitWigner, MagSq
+from .vartools import observables_to_mandelstam
 
 
 class DnDnPip(DalitzPhsp):
@@ -49,25 +50,56 @@ class DnDnPip(DalitzPhsp):
         return 2*mpip*self.KineC(mdd) * MagSq(self.a1(mdd, md1pi) + self.a2())
 
     def pdf_vars(self, e, pd, mdpi):
-        """ Convenience function for PDF in terms of observables
-        e: energy (MeV), pd: p(D) (MeV), mdpi: m(Dpi) (MeV) """
-        return self.pdf(np.column_stack(self.vars_to_mandelstam(e, pd, mdpi)))
+        """ Convenience function for PDF in terms of the observables
+        Args:
+          - e: energy (MeV)
+          - pd: p(D) (MeV)
+          - mdpi: m(Dpi) (MeV)
+        """
+        s, mddsq, md1pisq = observables_to_mandelstam(e, pd, mdpi)
+        return self.pdf_3d(s, mddsq, md1pisq)
 
-    def vars_to_mandelstam(self, e, pd, mdpi):
-        """ (E, p(D), m(Dpi+)) -> (E, m^2(DD), m^2(Dpi+)) """
-        return (
-            e * 10**-3,
-            (pd*10**-6 / mdn + 2*mdn)**2,
-            (mdpi * 10**-3)**2
-        )
-
-    def pdf(self, evts):
-        """ 3D or 5D PDF """
-        # phase-space mask
-        E, mddsq, md1pisq = [evts[:,i] for i in range(3)]
-        mMo = E + TMtx.thr
-        s = mMo**2
+    def pdf_3d(self, s, mddsq, md1pisq):
+        """ 3D PDF
+        Args:
+          - s: Mandelstam variable (GeV^2)
+          - mddsq: m^2(DD) (GeV^2)
+          - md1pisq: m^2(Dpi) (GeV^2)
+        """
+        # print([x.flatten()[0] for x in [s, mddsq, md1pisq]])
         mask = self.isInPhsp(s, mddsq, md1pisq)
+        result = np.zeros(mask.shape, dtype=float)
+        if not np.any(mask):
+            print('Warning: all zeros')
+            result
+
+        mMo = np.sqrt(s)
+        E = mMo - TMtx.thr
+        mMov, Ev, sv, mddsqv, md1pisqv = [x[mask] for x in [mMo, E, s, mddsq, md1pisq]]
+
+        # pre-calculations
+        md2pisqv = self.mijsq(sv, mddsqv, md1pisqv)
+        # T-matrix factor
+        tv = np.sum(self.tmtx(Ev)[0], axis=0)
+        # Dalitz plot amplitude
+        amp = tv * (self.bwdstp(md1pisqv) + self.bwdstp(md2pisqv))
+        # pion momentum squared
+        kine = 2 * mpip * self.iKineFramejk(mMov, mpip, mddsqv)
+        # Full amplitude
+        result[mask] = kine * MagSq(amp)
+        return result
+
+    def pdf(self, evts, mand=False):
+        """ 3D or 5D PDF """
+        s, mddsq, md1pisq = [evts[:, i] for i in range(3)]
+        if not mand:
+            E, s = s, (s + TMtx.thr)**2
+        else:
+            E = np.sqrt(s) - TMtx.thr
+        mMo = np.sqrt(s)
+
+        mask = self.isInPhsp(s, mddsq, md1pisq)
+        list(map(min, [s, mddsq, md1pisq])), list(map(max, [s, mddsq, md1pisq]))
         assert np.any(mask)
 
         result = np.zeros(mask.shape, dtype=float)
