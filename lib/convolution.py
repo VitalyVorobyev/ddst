@@ -4,7 +4,7 @@ import itertools
 import numpy as np
 from scipy import stats, signal
 
-from typing import Iterable
+from typing import Iterable, Tuple, Callable
 
 from . import resolution as res
 from .params import mdn, mpip, mdstp
@@ -18,23 +18,61 @@ def get_resolution(e, pd):
         res.smdstp()*10**3
     )
 
-def local_grid_1d(data: float, sigma: float,
-                  ndots: int=101, nsigma: float=5.) -> tuple:
-    data_grid = np.linspace(data - nsigma*sigma, data + nsigma*sigma, ndots)
+def get_covariance(observables:np.ndarray) -> (np.ndarray):
+    """ observables: shape (N, 3)
+    Returns: np.array, shape(N, 3, 3)
+    """
+    return np.array([])
+
+def local_grid_1d(x: float, sigma: float,
+                  ndots: int=101, nsigma: float=5.) -> (Tuple):
+    data_grid = np.linspace(x - nsigma*sigma, x + nsigma*sigma, ndots).flatten()
     delta = data_grid[1] - data_grid[0]
     reso_grid = np.arange(-nsigma*sigma, nsigma*sigma + 0.5*delta, delta)
     return (data_grid, reso_grid, delta)
 
-def meshdrid(lists):
+def smear_1d(x:float, pdf:Callable, sigma:Callable,
+             rpdf:Callable=stats.norm.pdf, ndots:int=101,
+             nsigma:float=5) -> (float):
+    """ Calculates smeared pdf value """
+    data_grid, reso_grid, delta = local_grid_1d(x, sigma(x))
+    smeared_pdf = signal.fftconvolve(
+        pdf(data_grid), rpdf(reso_grid, 0, sigma(reso_grid)), 'same') * delta
+    return smeared_pdf[ndots // 2]
+
+def meshgrid(lists):
     return np.array(list(itertools.product(*lists)))
 
 def local_grid_nd(data: Iterable, sigma: Iterable,
-                  ndots: int=101, nsigma: float=5.) -> tuple:
+                  ndots: int=101, nsigma: float=5.) -> (Tuple):
     grids = [local_grid_1d(x, s, ndots, nsigma) for x, s in zip(data, sigma)]
-    data_grid = meshdrid([item[0] for item in grids])
-    reso_grid = meshdrid([item[1] for item in grids])
-    delta = np.prod([item[2] for item in grids])
-    return (data_grid, reso_grid, delta)
+    return (meshgrid([item[0] for item in grids]),
+            meshgrid([item[1] for item in grids]),
+            np.prod([item[2] for item in grids]))
+
+def vectorized_mvn(x:np.ndarray, cov:np.ndarray, mean:np.ndarray=None)\
+        -> (np.ndarray):
+    """ Calculates multivariate normal distribution with event-dependent
+        covariance and mean
+    TODO: implement event-dependent mean
+    Args:
+        - x shape (N, k)
+        - cov shape (N, k, k)
+        - mean shape (N, k)
+    Returns:
+        - (N, 1)
+    """
+    denominator = (2.*np.pi)**(x.shape[1] / 2) * np.linalg.det(cov)**0.5
+    numerator = np.exp(
+        -0.5 * np.einsum('...j, ...jk, ...k -> ...', x, np.linalg.inv(cov), x))
+    return numerator / denominator
+
+def smear_nd(x:Iterable, pdf:Callable, covar:Callable,
+             ndots:int=31, nsigma:float=5) -> (float):
+    sigma = np.sqrt(np.diag(covar(np.array([x]))[0]))
+    data_grid, reso_grid, delta = local_grid_nd(x, sigma)
+    fres = vectorized_mvn(reso_grid, covar(reso_grid))
+    return np.sum(pdf(data_grid) * np.flip(fres)) * delta
 
 def local_resolution_grid(e, pd, mdpi, ndots=101, nsigma=5):
     """ Local grid and 3D Gaussian resolution window """
