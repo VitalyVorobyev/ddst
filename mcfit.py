@@ -3,7 +3,9 @@
 import os
 import numpy as np
 
-from lib.convolution import local_resolution_grid
+from iminuit import Minuit
+
+from lib.convolution import smear_nd
 from lib.vartools import generated_to_observables, observables_to_mandelstam
 from lib.dndnpip import DnDnPip
 
@@ -29,3 +31,34 @@ def get_sample(re, im, ch, nevt):
     else:
         return None
 
+class ConvFitterMC():
+    def __init__(self, pdf):
+        self.pdf = pdf
+
+    def fcn(self, gsre, gsim, gtre):
+        self.pdf.set_gs_gt(
+            (gsre + 1j*gsim)*10**-3,
+            (gtre + 1j*gsim)*10**-3
+        )
+        loglh = self.loglh()
+        print(f'loglh {loglh:.3f}')
+        return loglh
+
+    def loglh(self):
+        return -np.sum(np.log(self.pdf(self.data))) +\
+            np.log(np.sum(self.pdf(self.norm_sample))) * self.data.shape[0]
+
+    def fit_to(self, data, norm_sample, gsre0, gsim0, gtre0):
+        self.data = data
+        self.norm_sample = norm_sample
+
+        mnt = Minuit(self.fcn, errordef=0.5,
+            gsre=gsre0, error_gsre=1., limit_gsre=(-10, 60), fix_gsre=False,
+            gsim=gsim0, error_gsim=1., limit_gsim=(0.5, 2.0), fix_gsim=True,
+            gtre=gtre0, error_gtre=1., limit_gtre=(-10, 60), fix_gtre=True,
+        )
+
+        fmin, params = mnt.migrad()
+        mnt.print_param()
+        corrmtx = mnt.matrix(correlation=True)
+        return (fmin, params, corrmtx)

@@ -25,6 +25,8 @@ class DnDnPip(DalitzPhsp):
         self.isInPhsp = lambda s, md1pisq, mddsq:\
             Kibble(s, md1pisq, mddsq, mdn**2, mdn**2, mpip**2)
 
+    def set_gs_gt(self, gs, gt):
+        self.tmtx = TMtx(gs, gt)
 
     def setE(self, E):
         tmtx = self.tmtx(E)
@@ -66,7 +68,6 @@ class DnDnPip(DalitzPhsp):
           - mddsq: m^2(DD) (GeV^2)
           - md1pisq: m^2(Dpi) (GeV^2)
         """
-        # print([x.flatten()[0] for x in [s, mddsq, md1pisq]])
         mask = self.isInPhsp(s, mddsq, md1pisq)
         result = np.zeros(mask.shape, dtype=float)
         if not np.any(mask):
