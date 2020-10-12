@@ -31,7 +31,20 @@ def local_grid_1d(x: float, sigma: float,
     reso_grid = np.arange(-nsigma*sigma, nsigma*sigma + 0.5*delta, delta)
     return (data_grid, reso_grid, delta)
 
-def smear_1d(x:float, pdf:Callable, sigma:Callable,
+
+def smear_1d(x:list, pdf:callable, sigma:callable,
+             ndots:int=101, nsigma:float=5) -> (float):
+    """ Calculates smeared pdf value """
+    data_grid, reso_grid, delta = local_grid_1d(x, sigma(x))
+    pdf_grid = np.flip(pdf(data_grid))
+    sigmas = sigma(data_grid)
+
+    fres = np.exp(-0.5 * reso_grid**2 / sigmas**2) /\
+        (2.*np.pi)**(0.5) * sigmas**0.5
+    return np.dot(pdf_grid, fres) * delta
+
+
+def smear_1d_v0(x:float, pdf:Callable, sigma:Callable,
              rpdf:Callable=stats.norm.pdf, ndots:int=101,
              nsigma:float=5) -> (float):
     """ Calculates smeared pdf value """
@@ -69,6 +82,7 @@ def vectorized_mvn(x:np.ndarray, cov:np.ndarray, mean:np.ndarray=None)\
 
 def smear_nd(x:Iterable, pdf:Callable, covar:Callable,
              ndots:int=31, nsigma:float=5) -> (float):
+    """  """
     sigma = np.sqrt(np.diag(covar(np.array([x]))[0]))
     data_grid, reso_grid, delta = local_grid_nd(x, sigma)
     fres = vectorized_mvn(reso_grid, covar(reso_grid))

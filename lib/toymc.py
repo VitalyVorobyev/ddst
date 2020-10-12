@@ -25,6 +25,7 @@ def get_toymc_sample(re, im, ch, nevt):
     data = np.load(fname)[:nevt]
     return (data[:, 0], *generated_to_observables(data[:, 1], data[:, 2]))
 
+
 class MCProducer():
     """ """
 
