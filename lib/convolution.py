@@ -32,16 +32,29 @@ def local_grid_1d(x: float, sigma: float,
     return (data_grid, reso_grid, delta)
 
 
-def smear_1d(x:list, pdf:callable, sigma:callable,
+def norm(x, s):
+    return np.exp(-0.5 * (x / s)**2) / ((2.*np.pi)**(0.5) * s)
+
+
+def smear_1d(x:Iterable, pdf:callable, sigma:callable,
              ndots:int=101, nsigma:float=5) -> (float):
     """ Calculates smeared pdf value """
-    data_grid, reso_grid, delta = local_grid_1d(x, sigma(x))
-    pdf_grid = np.flip(pdf(data_grid))
-    sigmas = sigma(data_grid)
+    result = []
+    for item, sig in zip(x, sigma(x)):
+        data_grid, reso_grid, delta = local_grid_1d(item, sig)
+        result.append(np.dot(pdf(data_grid), norm(reso_grid[::-1], sigma(data_grid))) * delta)
+    return np.array(result)
 
-    fres = np.exp(-0.5 * reso_grid**2 / sigmas**2) /\
-        (2.*np.pi)**(0.5) * sigmas**0.5
-    return np.dot(pdf_grid, fres) * delta
+
+def convolve_1d(lo: float, hi:float, pdf:Callable, sigma:Callable, ndots=512):
+    """ Global convolution """
+    delta = hi - lo
+    xgrid = np.linspace(lo, hi, ndots)
+    ygrid = np.linspace(-delta, delta, 2*ndots)
+    result = np.zeros(3*ndots)
+    for idx, (p, s) in enumerate(zip(pdf(xgrid), sigma(xgrid))):
+        result[idx:idx+2*ndots] += p*norm(ygrid, s)
+    return (xgrid, result[ndots:-ndots] * delta / ndots)
 
 
 def smear_1d_v0(x:float, pdf:Callable, sigma:Callable,
@@ -53,8 +66,11 @@ def smear_1d_v0(x:float, pdf:Callable, sigma:Callable,
         pdf(data_grid), rpdf(reso_grid, 0, sigma(reso_grid)), 'same') * delta
     return smeared_pdf[ndots // 2]
 
+
 def meshgrid(lists):
-    return np.array(list(itertools.product(*lists)))
+    return np.fromiter(itertools.product(*lists))
+    # return np.array(list(itertools.product(*lists)))
+
 
 def local_grid_nd(data: Iterable, sigma: Iterable,
                   ndots: int=101, nsigma: float=5.) -> (Tuple):

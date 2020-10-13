@@ -66,7 +66,7 @@ class ConvFitterMC():
 
 
 class ConvFitterNorm():
-    def __init__(self, pdf: callable, covar: callable):
+    def __init__(self, pdf:callable, covar:callable):
         """
         Args:
             - pdf: true, not smeared, PDF
@@ -83,13 +83,9 @@ class ConvFitterNorm():
         return loglh
 
     def loglh(self):
-        smpdf = np.fromiter(
-            map(lambda x: smear_1d(x, self.pdf, self.covar), self.data),
-            dtype=np.float
-        )
-        return -np.sum(np.log(smpdf)) +\
+        return -np.sum(np.log(smear_1d(self.data.flatten(), self.pdf, self.covar))) +\
             np.log(np.sum(self.pdf(self.norm_sample))) * self.data.shape[0]
-        
+
 
     def fit_to(self, data, norm_sample, mean0, sigma0):
         self.data = data

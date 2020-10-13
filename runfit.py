@@ -1,21 +1,21 @@
 #! /usr/bin/env python
 
+import sys
 import numpy as np
 from scipy import stats
 
 import matplotlib.pyplot as plt
 
 from mcfit import ConvFitterNorm
-from lib.convolution import smear_1d
+from lib.convolution import smear_1d, convolve_1d
 
 def smear(sample: np.ndarray, covar: callable, gen=None):
     if gen is None:
         gen = np.random.Generator(np.random.PCG64())
 
-    return np.fromiter(
-        map(lambda x: gen.normal(x, covar(x)), sample),
-        dtype=np.float)
-
+    return np.array([gen.normal(x, covar(x)) for x in sample])
+    # return np.apply_along_axis(
+    #     lambda x: gen.normal(x, covar(x)), axis=0, arr=sample)
 
 class NormPdf:
     def __init__(self, mean, sigma):
@@ -25,23 +25,30 @@ class NormPdf:
     def __call__(self, x:float):
         return stats.norm.pdf(x, self.mean, self.sigma)
 
+def covariance(x, coef):
+    if isinstance(x, float):
+        min(max(0.1, 0.7 + coef*x**2), 10)
+    return np.clip(np.ones(x.size)*0.7 + coef*x**2, 0.1, 10)
 
 def norm_1d_fit():
     """ Test of the fit procedure with 1D normal distribution """
     mean = 2.
     sigma = 0.5
-    nsig = 2000
-    nnorm = 20000
+    nsig = 5000
+    nnorm = 50000
 
     pdf = NormPdf(mean, sigma)
-    covar = lambda x: np.ones(x.size) * 0.7 + 0.1*x
-    # covar = lambda x: np.ones(x.size) * 0.7
+    coef = float(sys.argv[1]) if len(sys.argv) == 2 else 0.
+    covar = lambda x: covariance(x, coef)
+    # covar = lambda x: np.clip(np.ones(x.size) * 0.7 + coef*x, 0.1, 10)
+    # covar = lambda x: max(0.1, 0.7*x + coef*x)
 
     gen = np.random.Generator(np.random.PCG64())
     sample = gen.normal(mean, sigma, nsig)
     smeared_sample = smear(sample, covar, gen)
 
-    norm_sample = gen.uniform(smeared_sample.min(), smeared_sample.max(), nnorm)
+    lo, hi = smeared_sample.min(), smeared_sample.max()
+    norm_sample = gen.uniform(lo, hi, nnorm)
 
     nbins=40
     plt.figure(figsize=(8,6))
@@ -51,15 +58,17 @@ def norm_1d_fit():
     plt.grid()
     plt.tight_layout()
 
-    x = np.linspace(smeared_sample.min(), smeared_sample.max(), 100)
+    x = np.linspace(lo, hi, 200)
+    dx = x[1] - x[0]
     pdfval = pdf(x)
-    smpdfval = np.fromiter(map(lambda val: smear_1d(val, pdf, covar), x), dtype=np.float)
-    print(pdfval.sum())
-    print(smpdfval.sum())
+    smpdfval = smear_1d(x, pdf, covar)
+    print(pdfval.sum() * dx)
+    print(smpdfval.sum() * dx)
+    xx, convpdf = convolve_1d(lo, hi, pdf, covar)
     plt.plot(x, pdfval)
-    plt.plot(x, smpdfval / smpdfval.sum() * pdfval.sum())
+    plt.plot(x, smpdfval)
+    plt.plot(xx, convpdf)
     plt.show()
-    return
 
     fitter = ConvFitterNorm(pdf, covar)
     fmin, params, corrmtx = fitter.fit_to(smeared_sample, norm_sample, mean, sigma)
