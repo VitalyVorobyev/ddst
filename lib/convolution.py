@@ -31,12 +31,24 @@ def local_grid_1d(x: float, sigma: float,
     reso_grid = np.arange(-nsigma*sigma, nsigma*sigma + 0.5*delta, delta)
     return (data_grid, reso_grid, delta)
 
+def meshgrid(lists):
+    # return np.fromiter(itertools.product(*lists), dtype=np.float)
+    return np.array(list(itertools.product(*lists)))
+
+
+def local_grid_nd(data: Iterable, sigma: Iterable,
+                  ndots: int=101, nsigma: float=5.) -> (Tuple):
+    grids = [local_grid_1d(x, s, ndots, nsigma) for x, s in zip(data, sigma)]
+    return (meshgrid([item[0] for item in grids]),
+            meshgrid([item[1] for item in grids]),
+            np.prod([item[2] for item in grids]))
+
 
 def norm(x, s):
     return np.exp(-0.5 * (x / s)**2) / ((2.*np.pi)**(0.5) * s)
 
 
-def smear_1d(x:Iterable, pdf:callable, sigma:callable,
+def smear_1d(x:Iterable, pdf:Callable, sigma:Callable,
              ndots:int=101, nsigma:float=5) -> (float):
     """ Calculates smeared pdf value """
     result = []
@@ -56,6 +68,12 @@ def convolve_1d(lo: float, hi:float, pdf:Callable, sigma:Callable, ndots=512):
         result[idx:idx+2*ndots] += p*norm(ygrid, s)
     return (xgrid, result[ndots:-ndots] * delta / ndots)
 
+def convolve_nd(box:Iterable, pdf:Callable, covar:Callable, binning:Iterable):
+    """ """
+    boxsz = [hi - lo for lo, hi in box]
+    main_grid = np.meshgrid([np.linspace(lo - s, hi + s, nbins)
+        for lo, hi, s, nbins in zip(box, boxsz, binning)])
+    # reso_grid = 
 
 def smear_1d_v0(x:float, pdf:Callable, sigma:Callable,
              rpdf:Callable=stats.norm.pdf, ndots:int=101,
@@ -65,19 +83,6 @@ def smear_1d_v0(x:float, pdf:Callable, sigma:Callable,
     smeared_pdf = signal.fftconvolve(
         pdf(data_grid), rpdf(reso_grid, 0, sigma(reso_grid)), 'same') * delta
     return smeared_pdf[ndots // 2]
-
-
-def meshgrid(lists):
-    return np.fromiter(itertools.product(*lists))
-    # return np.array(list(itertools.product(*lists)))
-
-
-def local_grid_nd(data: Iterable, sigma: Iterable,
-                  ndots: int=101, nsigma: float=5.) -> (Tuple):
-    grids = [local_grid_1d(x, s, ndots, nsigma) for x, s in zip(data, sigma)]
-    return (meshgrid([item[0] for item in grids]),
-            meshgrid([item[1] for item in grids]),
-            np.prod([item[2] for item in grids]))
 
 def vectorized_mvn(x:np.ndarray, cov:np.ndarray, mean:np.ndarray=None)\
         -> (np.ndarray):

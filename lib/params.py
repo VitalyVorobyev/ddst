@@ -6,17 +6,22 @@ matplotlib.rc('xtick', labelsize=16)
 matplotlib.rc('ytick', labelsize=16)
 matplotlib.rc('font', size=18)
 
-mdn    = 1.86484
-dmdp   = 0.004822
-dmdstn = 0.142014
-dmdstp = 0.1454257
-mpin   = 0.1349766
-mpip   = 0.13957018
-gamma_star_n = 58.3e-6
-gamma_star_p = 85.5e-6
+mev = True
+scale = 1.e3 if mev else 1.
+
+mdn    = 1.86484 * scale
+dmdp   = 0.004822 * scale
+dmdstn = 0.142014 * scale
+dmdstp = 0.1454257 * scale
+mpin   = 0.1349766 * scale
+mpip   = 0.13957018 * scale
+gamma_star_n = 58.3e-6 * scale
+gamma_star_p = 85.5e-6 * scale
 mdp   = mdn + dmdp  # 1.86965
 mdstn = mdn + dmdstn
 mdstp = mdn + dmdstp
+
+tpi = 6.6e-3 * scale
 
 isospin_breaking = 1.0
 mdp   = mdn   + isospin_breaking * (mdp   - mdn)
@@ -36,8 +41,8 @@ gamma_star_n_dnpin = gamma_star_n * br_dstn_dnpin
 gamma_star_n_dngam = gamma_star_n * br_dstn_dngam
 
 # Resolution parameters
-sigma_mdn = 8.20 * 10**-3  # m(D0) LHCb resolution
-sigma_ppi = 1.17 * 10**-3  # m(D*+) LHCb resolution
+sigma_mdn = 8.20 * 10**-3 * scale  # m(D0) LHCb resolution
+sigma_ppi = 1.17 * 10**-3 * scale  # m(D*+) LHCb resolution
 
 # gs = ( 30 + 1.j) * 10**-3
 # gt = (-30 + 1.j) * 10**-3
@@ -61,8 +66,8 @@ sigma_ppi = 1.17 * 10**-3  # m(D*+) LHCb resolution
 # gs = (23 +3j) * 10**-3
 # gt = (13 +3j) * 10**-3
 
-gs = (   43 + 1.5j) * 10**-3
-gt = (25000 + 1.5j) * 10**-3
+gs = (   43 + 1.5j) * 10**-3 * scale
+gt = (25000 + 1.5j) * 10**-3 * scale
 
 DalitzNBins = 512
 GammaScale = 16.365e-3

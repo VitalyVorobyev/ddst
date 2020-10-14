@@ -8,7 +8,7 @@ import jax.numpy as jnp
 
 import matplotlib.pyplot as plt
 
-from .params import sigma_ppi, sigma_mdn, mpip, mdn, mdstp
+from .params import sigma_ppi, sigma_mdn, mpip, mdn, mdstp, scale
 
 sppiSq = sigma_ppi**2
 smdSq = sigma_mdn**2
@@ -17,9 +17,9 @@ def spline(x, y, newx):
     """ Cubic spline """
     return interp1d(x, y, kind='cubic')(newx).reshape(1, -1)
 
-def smdstp(tpi=6.6e-3):
+def smdstp(tpi=tpi):
     """ sigma(D*+) """
-    return jnp.sqrt(2*tpi/mpip)*sigma_ppi
+    return np.sqrt(2*tpi/mpip)*sigma_ppi
 
 def kine_pi(e):
     """ Kinetic energy of pi+ T(pi+) """
@@ -28,7 +28,7 @@ def kine_pi(e):
 def smddpi(e, tdd):
     """ sigma(m_DDpi) """
     return (2*mdn) / (2*mdn+mpip) *\
-        jnp.sqrt(0.5*tdd/mdn * smdSq + 2*kine_pi(e)/mpip*sppiSq)
+        np.sqrt(0.5*tdd/mdn * smdSq + 2*kine_pi(e)/mpip*sppiSq)
 
 def smddpi2(e, pd):
     """ sigma(m_DDpi) in terms of p_D """
