@@ -8,7 +8,7 @@ from scipy import stats
 import matplotlib.pyplot as plt
 
 from mcfit import ConvFitterNorm
-from lib.convolution import smear_1d, convolve_1d, meshgrid, local_grid_nd
+from lib.convolution import smear_1d, convolve_1d, meshgrid, local_grid_nd, build_box, convolve_nd
 from lib.dndnpip import DnDnPip
 from lib import params as prm
 from lib import vartools
@@ -35,8 +35,11 @@ def covariance(x, coef):
 def xcovar_3d(e, pd, md1pi):
     return np.diag([spd(), smddpi2(e, pd), smdstp()])**2
 
-xcovar_3dvec = np.vectorize(xcovar_3d)
+def xcovar_3dvec(ev, pdv, md1piv):
+    return np.stack([xcovar_3d(e, pd, md1pi) for e, pd, md1pi in
+        zip(ev.ravel(), pdv.ravel(), md1piv.ravel())]).reshape(ev.shape + (3, 3))
 
+# xcovar_3dvec = np.vectorize(xcovar_3d)
 
 def norm_1d_fit():
     """ Test of the fit procedure with 1D normal distribution """
@@ -48,8 +51,6 @@ def norm_1d_fit():
     pdf = NormPdf(mean, sigma)
     coef = float(sys.argv[1]) if len(sys.argv) == 2 else 0.
     covar = lambda x: covariance(x, coef)
-    # covar = lambda x: np.clip(np.ones(x.size) * 0.7 + coef*x, 0.1, 10)
-    # covar = lambda x: max(0.1, 0.7*x + coef*x)
 
     gen = np.random.Generator(np.random.PCG64())
     sample = gen.normal(mean, sigma, nsig)
@@ -81,8 +82,6 @@ def norm_1d_fit():
     plt.plot(xx, convpdf)
     plt.show()
 
-
-
     fitter = ConvFitterNorm(pdf, covar)
     fmin, params, corrmtx = fitter.fit_to(smeared_sample, norm_sample, mean, sigma)
     print(fmin)
@@ -104,26 +103,35 @@ def fit_model():
     sample = sample[(sample[:,1] > eps) & (sample[:,0] < 9) & (sample[:,1] < 120)]
     print(sample.shape)
 
-    fig, ax = plt.subplots(ncols=3, nrows=2, figsize=(14.5, 9))
-    for i, a in enumerate(ax[0]):
-        a.hist(sample[:,i], bins=100, histtype='step')
-        a.grid()
-    for i, a in enumerate(ax[1]):
-        a.scatter(sample[:,(i+0)%3], sample[:,(i-1)%3], s=0.4)
-        a.grid()
-    fig.tight_layout()
-    # plt.show()
+    if False:
+        fig, ax = plt.subplots(ncols=3, nrows=2, figsize=(14.5, 9))
+        for i, a in enumerate(ax[0]):
+            a.hist(sample[:,i], bins=100, histtype='step')
+            a.grid()
+        for i, a in enumerate(ax[1]):
+            a.scatter(sample[:,(i+0)%3], sample[:,(i-1)%3], s=0.4)
+            a.grid()
+        fig.tight_layout()
+        plt.show()
 
-    print(sample[:,0].shape)
-    sample_gev = sample * 1.e-3
-    item = 10
-    cov = xcovar_3d(sample_gev[item,0], sample_gev[item,1], sample_gev[item,2])
-    print(np.linalg.inv(cov))
+    pdf = DnDnPip(prm.gs, prm.gt)
+    nbins = 10
+    data_box = build_box(sample)
+    convolve_nd(
+        data_box,
+        lambda x: pdf.pdf_vars(x),
+        xcovar_3dvec,
+        np.ones(data_box.shape[0], dtype=np.int32) * nbins
+    )
+
+    # item = 10
+    # cov = xcovar_3d(sample[item,0], sample[item,1], sample[item,2])
+    # print(np.linalg.inv(cov))
 
     # covs = xcovar_3dvec(sample[:,0], sample[:,1], sample[:,2])
     # print(covs.shape)
+    # print(np.linalg.inv(covs)[item])
 
-    # pdf = DnDnPip(prm.gs, prm.gt)
     # mgrid = meshgrid([sample[:,0], sample[:,1], sample[:,2]])
     # pdf_vals = pdf.pdf_vars(mgrid[:,0], mgrid[:,1], mgrid[:,2])
     # print(pdf_vals.shape)

@@ -8,7 +8,7 @@ import jax.numpy as jnp
 
 import matplotlib.pyplot as plt
 
-from .params import sigma_ppi, sigma_mdn, mpip, mdn, mdstp, scale
+from .params import sigma_ppi, sigma_mdn, mpip, mdn, mdstp, scale, tpi
 
 sppiSq = sigma_ppi**2
 smdSq = sigma_mdn**2
@@ -55,7 +55,7 @@ def smear_tdd(tdd, p, dots=250):
 def smear_mdpi(mdpi, p, dots=250):
     """ """
     # newx = np.linspace(mdpi[0], mdpi[-1], dots)
-    newx = np.linspace(mdpi[0], 2.020, dots)
+    newx = np.linspace(mdpi[0], 2.020*scale, dots)
     appx = newx[newx>mdpi[-1]]
     mdpi = np.append(mdpi, appx)
     p = np.append(p, np.zeros(appx.shape))
@@ -88,7 +88,7 @@ def smear_e(e, ev, tdd, ptdd, dots=250):
     return (np.sum(newptdd.reshape(1,-1) @ r, axis=0),
             np.average(smddpi(e, newtdd.T), weights=newptdd))
 
-def smear_e_const(e, ev, tdd=None, ptdd=None, dots=250, sigma=0.00035):
+def smear_e_const(e, ev, tdd=None, ptdd=None, dots=250, sigma=0.00035*scale):
     """ """
     return (norm.pdf(ev, e, sigma), sigma)
 

@@ -68,12 +68,21 @@ def convolve_1d(lo: float, hi:float, pdf:Callable, sigma:Callable, ndots=512):
         result[idx:idx+2*ndots] += p*norm(ygrid, s)
     return (xgrid, result[ndots:-ndots] * delta / ndots)
 
-def convolve_nd(box:Iterable, pdf:Callable, covar:Callable, binning:Iterable):
+def build_box(data:np.ndarray):
+    """ Rectangular box containing all events. Arg. data: [N x ndim] """
+    return np.array([[data[:,i].min(), data[:,i].max()] for i in range(data.shape[1])])
+
+def grid_in_box(box, binning):
     """ """
-    boxsz = [hi - lo for lo, hi in box]
-    main_grid = np.meshgrid([np.linspace(lo - s, hi + s, nbins)
-        for lo, hi, s, nbins in zip(box, boxsz, binning)])
-    # reso_grid = 
+    return np.meshgrid([np.linspace(lo, hi, n) for [lo, hi], n in zip(box, binning)])
+
+def build_reso_box(box):
+    """ """
+    return np.array([[lo - hi, hi - lo] for lo, hi in box])
+
+def build_conv_box(box):
+    """ """
+    return np.array([[lo - (hi - lo), hi + (hi - lo)] for lo, hi in box])
 
 def smear_1d_v0(x:float, pdf:Callable, sigma:Callable,
              rpdf:Callable=stats.norm.pdf, ndots:int=101,
@@ -100,6 +109,20 @@ def vectorized_mvn(x:np.ndarray, cov:np.ndarray, mean:np.ndarray=None)\
     numerator = np.exp(
         -0.5 * np.einsum('...j, ...jk, ...k -> ...', x, np.linalg.inv(cov), x))
     return numerator / denominator
+
+
+def convolve_nd(box:Iterable, pdf:Callable, covar:Callable, binning:Iterable):
+    """ """
+    main_grid = grid_in_box(box, binning)
+    print(main_grid[0].shape, len(main_grid))
+    mgrid = np.stack(main_grid, axis=-1)
+    print(mgrid.shape)
+    return
+    covars = covar(*main_grid)
+
+    conv_grid = grid_in_box(build_conv_box(box), 3*binning)
+    reso_grid = grid_in_box(build_reso_box(box), 2*binning)
+
 
 def smear_nd(x:Iterable, pdf:Callable, covar:Callable,
              ndots:int=31, nsigma:float=5) -> (float):
