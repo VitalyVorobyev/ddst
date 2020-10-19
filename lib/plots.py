@@ -244,7 +244,8 @@ def draw_pdf_projections(ax, x, y, label=None):
     labels = (r'$E (MeV)$', r'$p(D^0)$ (MeV)', r'$m(D^0pi^+)$ (MeV)')
     dx = [item[1] - item[0] for item in x]
     projs = [y.sum(axis=atup) * dx[atup[0]] * dx[atup[1]]
-        for atup in [(1,2), (0,2), (0,1)]]
+        for atup in [(0,2), (1,2), (0,1)]]
+        # for atup in [(1,2), (0,2), (0,1)]]
     for idx, (lbl, xi, pro) in enumerate(zip(labels, x, projs)):
         ax[idx].plot(xi, pro, label=label)
         if label:

@@ -19,11 +19,12 @@ def p_to_mddst(p):
 def mdpi_to_mdpisq(mdpi):
     return (mdpi*10**-3)**2
 
+coef = 10**-3*scale
+
 def observables_to_mandelstam(e, pd, md1pi):
     """ (E, p(D), m(Dpi+)) (MeV) -> (s, m^2(DD), m^2(Dpi+)) (GeV) """
-    # TODO: use params.scale
     return (
-        (e*10**-3 + mdn + mdstp)**2,      # s
-        (pd**2*10**-6 / mdn + 2*mdn)**2,  # m^2(DD)
-        (md1pi*10**-3)**2                 # m^2(Dpi+)
+        (e*coef + mdn + mdstp)**2,         # s
+        (pd**2*coef**3 / mdn + 2*mdn)**2,  # m^2(DD)
+        (md1pi*coef)**2                    # m^2(Dpi+)
     )

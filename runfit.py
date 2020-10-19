@@ -8,11 +8,12 @@ from scipy import stats
 import matplotlib.pyplot as plt
 
 from mcfit import ConvFitterNorm
-from lib.convolution import smear_1d, convolve_1d, meshgrid, local_grid_nd, build_box, convolve_nd
+from lib import convolution as cnv
 from lib.dndnpip import DnDnPip
 from lib import params as prm
 from lib import vartools
 from lib.resolution import spd, smddpi2, smdstp
+from lib import plots
 
 def smear(sample: np.ndarray, covar: callable, gen=None):
     if gen is None:
@@ -103,26 +104,44 @@ def fit_model():
     sample = sample[(sample[:,1] > eps) & (sample[:,0] < 9) & (sample[:,1] < 120)]
     print(sample.shape)
 
-    if False:
+    if True:
         fig, ax = plt.subplots(ncols=3, nrows=2, figsize=(14.5, 9))
         for i, a in enumerate(ax[0]):
-            a.hist(sample[:,i], bins=100, histtype='step')
+            a.hist(sample[:,i], bins=100, histtype='step', density=True)
             a.grid()
         for i, a in enumerate(ax[1]):
             a.scatter(sample[:,(i+0)%3], sample[:,(i-1)%3], s=0.4)
             a.grid()
         fig.tight_layout()
-        plt.show()
 
-    pdf = DnDnPip(prm.gs, prm.gt)
-    nbins = 10
-    data_box = build_box(sample)
-    convolve_nd(
-        data_box,
-        lambda x: pdf.pdf_vars(x),
-        xcovar_3dvec,
-        np.ones(data_box.shape[0], dtype=np.int32) * nbins
-    )
+    data_box = cnv.build_box(sample)
+    # print(data_box)
+    bins = np.ones(data_box.shape[0], dtype=np.int32) * 256
+    box_ticks = cnv.ticks_in_box(data_box, bins)
+    box_grid = cnv.grid_in_box(data_box, bins)
+    # print(list(map(lambda x: x.shape, box_grid)))
+
+    # mand = vartools.observables_to_mandelstam(*box_grid)
+    # print(list(map(lambda x: x*1e-6, mand)))
+
+    gs = 40 + 1.5j
+    gt = 25000 + 1.5j
+    pdf = DnDnPip(gs, gt)
+    f = pdf.pdf_vars(*box_grid)
+    print(f.shape)
+
+    fig, ax = plt.subplots(ncols=3, nrows=1, figsize=(14.5, 4.5))
+    plots.draw_pdf_projections(ax, box_ticks, f)
+    fig.tight_layout()
+    plt.show()
+    
+
+    # convolve_nd(
+    #     data_box,
+    #     lambda x: pdf.pdf_vars(x),
+    #     xcovar_3dvec,
+    #     np.ones(data_box.shape[0], dtype=np.int32) * nbins
+    # )
 
     # item = 10
     # cov = xcovar_3d(sample[item,0], sample[item,1], sample[item,2])

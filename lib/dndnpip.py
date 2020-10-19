@@ -38,15 +38,13 @@ class DnDnPip(DalitzPhsp):
             print('  mX:  {:.3f} MeV'.format(self.mo*10**3))
             print('   t:  {:.3f}'.format(self.t))
 
-
     def inelastic(self):
+        """  """
         return norm_swave * np.exp(1.j*phiins)*self.tin
-
 
     def dstn_ampl(self, mdd, md1pi):
         md2pi = self.mZsq(mdd, md1pi)
         return self.t * (self.bwdstp(md1pi) + self.bwdstp(md2pi))
-
 
     def calc(self, mdd, md1pi):
         return 2*mpip*self.KineC(mdd) * MagSq(self.a1(mdd, md1pi) + self.a2())

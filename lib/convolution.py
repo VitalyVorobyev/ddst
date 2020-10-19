@@ -72,9 +72,12 @@ def build_box(data:np.ndarray):
     """ Rectangular box containing all events. Arg. data: [N x ndim] """
     return np.array([[data[:,i].min(), data[:,i].max()] for i in range(data.shape[1])])
 
+def ticks_in_box(box, binning):
+    return [np.linspace(lo, hi, n) for [lo, hi], n in zip(box, binning)]
+
 def grid_in_box(box, binning):
     """ """
-    return np.meshgrid([np.linspace(lo, hi, n) for [lo, hi], n in zip(box, binning)])
+    return np.meshgrid(*ticks_in_box(box, binning))
 
 def build_reso_box(box):
     """ """

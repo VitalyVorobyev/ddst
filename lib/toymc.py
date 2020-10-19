@@ -29,13 +29,15 @@ def get_toymc_sample(re, im, ch, nevt):
 class MCProducer():
     """ """
 
-    def __init__(self, pdf, phsp, maj=None):
+    def __init__(self, pdf, phsp, maj=None, seed=None):
         """  """
         self.pdf = lambda x: pdf(x).reshape(-1,1)
         self.phsp = phsp
         self.ndim = len(phsp)
         self.chunk_size = 10**7
         self.maj = self.assess_maj() if maj is None else maj
+        # self.gen = np.random.Generator(np.random.PCG64(seed))
+        self.gen = np.random.default_rng(seed)
         print(f'maj: {self.maj:.2f}')
 
 
@@ -67,7 +69,8 @@ class MCProducer():
     def get_chunk(self):
         """ Generates uniform sample in the X space """
         # Generate random number in the unit box
-        data = np.random.random((self.chunk_size, self.ndim))
+        data = self.gen.uniform((self.chunk_size, self.ndim))
+        # data = np.random.random((self.chunk_size, self.ndim))
 
         # Rescale each dimension
         for i, rng in enumerate(self.phsp):
@@ -78,7 +81,8 @@ class MCProducer():
 
     def get_xi(self):
         """ Random variable for the accept-reject algorithm """
-        return np.random.random((self.chunk_size, 1)) * self.maj
+        return self.gen.uniform((self.chunk_size, 1)) * self.maj
+        # return np.random.random((self.chunk_size, 1)) * self.maj
 
 
     def assess_maj(self):
