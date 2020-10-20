@@ -7,7 +7,7 @@ from .params import gs, gt, mdn, mdn, mpip, mdstp, gamma_star_p, DalitzNBins
 from .params import phiins, include_dstndp, include_dd_swave, Rin, g1, g2, norm_swave
 from .dalitzphsp import DalitzPhsp, Kibble
 from .lineshape import TMtx, RelativisticBreitWigner, MagSq
-from .vartools import observables_to_mandelstam
+from . import vartools as vt
 
 
 class DnDnPip(DalitzPhsp):
@@ -56,7 +56,7 @@ class DnDnPip(DalitzPhsp):
           - pd: p(D) (MeV)
           - mdpi: m(Dpi) (MeV)
         """
-        s, mddsq, md1pisq = observables_to_mandelstam(e, pd, mdpi)
+        s, mddsq, md1pisq = vt.observables_to_mandelstam(e, pd, mdpi)
         return self.pdf_3d(s, mddsq, md1pisq)
 
     def pdf_3d(self, s, mddsq, md1pisq):
@@ -88,25 +88,38 @@ class DnDnPip(DalitzPhsp):
         result[mask] = kine * MagSq(amp)
         return result
 
-    def pdf(self, evts, mand=False):
-        """ 3D or 5D PDF """
-        s, mddsq, md1pisq = [evts[:, i] for i in range(3)]
-        if not mand:
-            E, s = s, (s + TMtx.thr)**2
+    def pdf(self, **kwargs):
+        """ 3D or 5D PDF
+            Required agruments:
+                - mddsq
+                - md1pisq
+                - s or E
+            Optional arguments:
+                - gsre
+                - gsim
+        """
+        assert 'mddsq' in kwargs and 'md1pisq' in kwargs
+        assert 's' in kwargs or 'E' in kwargs
+
+        mddsq, md1pisq = [kwargs[key] for key in ['mddsq', 'md1pisq']]
+        if 's' in kwargs:
+            s = kwargs['s']
+            E = vt.s_to_e(s)
         else:
-            E = np.sqrt(s) - TMtx.thr
-        mMo = np.sqrt(s)
+            E = kwargs['s']
+            s = vt.e_to_s(E)
 
         mask = self.isInPhsp(s, mddsq, md1pisq)
-        list(map(min, [s, mddsq, md1pisq])), list(map(max, [s, mddsq, md1pisq]))
         assert np.any(mask)
 
         result = np.zeros(mask.shape, dtype=float)
+        Ev, sv, mddsqv, md1pisqv = [x[mask] for x in [E, s, mddsq, md1pisq]]
 
-        mMov, Ev, sv, mddsqv, md1pisqv = [x[mask] for x in [mMo, E, s, mddsq, md1pisq]]
+        mMov = np.sqrt(sv)
+        if 'gsre' in kwargs or 'gsim' in kwargs:
+            gsre = kwargs['gsre'][mask] if 'gsre' in kwargs else np.ones(sv.shape) * gs.real
+            gsim = kwargs['gsim'][mask] if 'gsim' in kwargs else np.ones(sv.shape) * gs.imag
         
-        if evts.shape[1] == 5:
-            gsre, gsim = [evts[mask,i+3] for i in range(2)]
             gsv = gsre + 1j*gsim
             gtv = gt.real + 1j*gsim
             self.tmtx.set_gs_gt(gsv, gtv)

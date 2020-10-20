@@ -89,52 +89,56 @@ def norm_1d_fit():
     print(corrmtx)
 
 
+def proj_plots(ax, sample, wgrid=True):
+    for i, a in enumerate(ax[0]):
+        a.hist(sample[:,i], bins=100, histtype='step', density=True)
+        if wgrid:
+            a.grid()
+    for i, a in enumerate(ax[1]):
+        a.scatter(sample[:,(i+0)%3], sample[:,(i-1)%3], s=0.4)
+        if wgrid:
+            a.grid()
+
 def fit_model():
-    sample_path = 'mcsamples'
-    sample_file = 'mc_ddpip_3d_gs40.00_1.50_ch10.npy'
+    # sample_path = 'mcsamples'
+    sample_path = '.'
+    sample_file = 'mc_ddpip_3d_gs42.00_1.30_ch5.npy'
+    # sample_file = 'mc_ddpip_3d_gs40.00_1.50_ch10.npy'
     # sample_file = 'mc_ddpip_3d_gs40.00_1.50_ch10_smeared.npy'
     sample_raw = np.load(os.path.join(sample_path, sample_file))
+    print(sample_raw[:3] / prm.scale**2)
     print(sample_raw.shape)
 
-    pd, md1pi = vartools.generated_to_observables(
-        sample_raw[:,1], sample_raw[:,2])
-
-    sample = np.column_stack((sample_raw[:,0], pd, md1pi))
-    eps = 1e-3
-    sample = sample[(sample[:,1] > eps) & (sample[:,0] < 9) & (sample[:,1] < 120)]
-    print(sample.shape)
-
+    fig1, ax1 = plt.subplots(ncols=3, nrows=2, figsize=(14.5, 9))
     if True:
-        fig, ax = plt.subplots(ncols=3, nrows=2, figsize=(14.5, 9))
-        for i, a in enumerate(ax[0]):
-            a.hist(sample[:,i], bins=100, histtype='step', density=True)
-            a.grid()
-        for i, a in enumerate(ax[1]):
-            a.scatter(sample[:,(i+0)%3], sample[:,(i-1)%3], s=0.4)
-            a.grid()
-        fig.tight_layout()
+        proj_plots(ax1, sample_raw / prm.scale**2)
+    fig1.tight_layout()
 
-    data_box = cnv.build_box(sample)
-    # print(data_box)
+    # pd, md1pi = vartools.generated_to_observables(
+    #     sample_raw[:,1], sample_raw[:,2])
+
+    # sample = np.column_stack((sample_raw[:,0], pd, md1pi))
+    # eps = 1e-3
+    # sample = sample[(sample[:,1] > eps) & (sample[:,0] < 9) & (sample[:,1] < 120)]
+    # print(sample.shape)
+
+    data_box = cnv.build_box(sample_raw)
     bins = np.ones(data_box.shape[0], dtype=np.int32) * 256
-    box_ticks = cnv.ticks_in_box(data_box, bins)
+    box_ticks = list(map(lambda x: x / prm.scale**2, cnv.ticks_in_box(data_box, bins)))
     box_grid = cnv.grid_in_box(data_box, bins)
-    # print(list(map(lambda x: x.shape, box_grid)))
 
-    # mand = vartools.observables_to_mandelstam(*box_grid)
-    # print(list(map(lambda x: x*1e-6, mand)))
-
-    gs = 40 + 1.5j
-    gt = 25000 + 1.5j
+    gs = 42 + 1.3j
+    gt = 25000 + 1.3j
     pdf = DnDnPip(gs, gt)
-    f = pdf.pdf_vars(*box_grid)
+    f = pdf.pdf(s=box_grid[0], mddsq=box_grid[1], md1pisq=box_grid[2])
+    # f = pdf.pdf_vars(*box_grid)
     print(f.shape)
 
     fig, ax = plt.subplots(ncols=3, nrows=1, figsize=(14.5, 4.5))
     plots.draw_pdf_projections(ax, box_ticks, f)
     fig.tight_layout()
     plt.show()
-    
+
 
     # convolve_nd(
     #     data_box,

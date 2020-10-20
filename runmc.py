@@ -7,46 +7,45 @@ import numpy as np
 import matplotlib.pyplot as plt
 from itertools import product
 
-from lib.params import gs, gt, mdn, mdstp, mpip
+from lib.params import gs, gt, mdn, mdstp, mpip, scale
 from lib.toymc import MCProducer
 from lib.dndnpip import DnDnPip
 from lib.lineshape import TMtx, MagSq
 from lib.dalitzphsp import Kibble
+from lib import vartools as vt
 
 
 def make_espace(erng):
     """ """
-    return ((erng[0]*10**-3, erng[1]*10**-3)) # energy range
+    return [erng[0], erng[1]] # energy range
 
+def make_s_space(erng):
+    return [vt.e_to_s(erng[0]), vt.e_to_s(erng[1])]
 
 def make_space_3d(erng, tddmax, mdpirng):
     """ """
-    return (
-        make_espace(erng),
-        ((2*mdn)**2, (2*mdn + tddmax*10**-3)**2),  # m(DD) range
-        (mdpirng[0]**2, mdpirng[1]**2),  # m(Dpi+) range
-    )
-
+    return np.array([
+        make_s_space(erng),                 # s === m^(DDpi+) range
+        [(2*mdn)**2, (2*mdn + tddmax)**2],  # m^2(DD) range
+        [mdpirng[0]**2, mdpirng[1]**2],     # m^2(Dpi+) range
+    ])
 
 def make_space_5d(erng, tddmax, mdpirng, gsre, gsim):
     """ """
-    return (
-        *make_space_3d(erng, tddmax, mdpirng),
-        ((gsre[0]*10**-3, gsre[1]*10**-3)), # gsre range
-        ((gsim[0]*10**-3, gsim[1]*10**-3)), # gsim range
-    )
+    return np.stack(make_space_3d(erng, tddmax, mdpirng), np.array[
+        [gsre[0], gsre[1]], # gsre range
+        [gsim[0], gsim[1]], # gsim range
+    ])
 
 def gen_ddpip(space, chunks, igs=gs, igt=gt):
     """ Main MC driver """
     pdf = DnDnPip(igs, igt)
+    cb = lambda x: pdf.pdf(s=x[:,0], mddsq=x[:,1], md1pisq=x[:,2])
 
-    driver = MCProducer(pdf.pdf, space)
+    driver = MCProducer(cb, space)
     data = driver(chunks=chunks)
-    data[:,0] *= 10**3
-    if data.shape[1] == 5:
-        data[:,3:] *= 10**3
 
-    np.save(f'mc_ddpip_{data.shape[1]}d_gs{igs.real*10**3:.2f}_{igs.imag*10**3:.2f}_ch{chunks}', data)
+    np.save(f'mc_ddpip_{data.shape[1]}d_gs{igs.real:.2f}_{igs.imag:.2f}_ch{chunks}', data)
 
 def gen_ddpip_3d(ranges, chunks, igs=gs, igt=gt):
     """ """
@@ -62,17 +61,20 @@ def phsp_plot(ranges):
     """ """
     space = make_space_3d(*ranges[:3])
 
-    x = np.linspace(*space[1], 1000)
-    y = np.linspace(*space[2], 1000)
-    xv, yv = np.meshgrid(x, y)
-    s = (space[0][1] + mdn + mdstp)**2
+    s3sp = np.linspace(*space[1], 1000)
+    s2sp = np.linspace(*space[2], 1000)
+    xv, yv = np.meshgrid(s3sp, s2sp)
+    smin, smax = space[0]
 
     m1sq = m2sq = mdn**2
     m3sq = mpip**2
 
-    z = Kibble(s, xv, yv, m1sq, m2sq, m3sq)
+    z1 = Kibble(smax, xv, yv, m1sq, m2sq, m3sq)
+    z2 = Kibble(smin, xv, yv, m1sq, m2sq, m3sq)
 
-    plt.contourf(-yv-xv, yv, z)
+    # plt.contourf(-yv-xv, yv, z)
+    plt.contourf(xv / scale**2, yv / scale**2, z1, alpha=0.5)
+    plt.contourf(xv / scale**2, yv / scale**2, z2, alpha=0.5)
     plt.show()
 
 
@@ -87,38 +89,32 @@ def generate_3d_on_grid(chunks):
     gsre = np.array([41.])
     gsim = np.array([1.85])
 
-    gsre *= 10**-3
-    gsim *= 10**-3
-
     for re, im in product(gsre, gsim):
-        print(f'generating {re*10**3:.2f} + i{im*10**3:.2f} ...')
-        gen_ddpip_3d(ranges, chunks=chunks,
-            igs=(re+1j*im),
-            igt=(25+1j*im),
-        )
+        print(f'generating {re:.2f} + i{im:.2f} ...')
+        gen_ddpip_3d(ranges, chunks=chunks, igs=(re+1j*im), igt=(25+1j*im))
 
 if __name__ == '__main__':
     try:
         ranges = (
-            [-2.5, 10],  # energy
-            10,  # Tdd max
-            [2.005, 2.016],  # m(D0 pi+)
-            [30., 40.],  # gs.real
-            [1.3, 1.7],   # gs.imag
+            [-2.5, 10],    # energy
+            10,            # Tdd max
+            [2005, 2016],  # m(D0 pi+)
+            [30., 40.],    # gs.real
+            [1.3, 1.7],    # gs.imag
         )
 
         phsp_plot(ranges)
         chunks = int(sys.argv[1])
         if len(sys.argv) == 4:
-            gsre = float(sys.argv[2]) * 10**-3
-            gsim = float(sys.argv[3]) * 10**-3
+            gsre = float(sys.argv[2])
+            gsim = float(sys.argv[3])
         else:
             gsre, gsim = gs.real, gs.imag
 
         # generate_3d_on_grid(chunks=chunks)
         gen_ddpip_3d(ranges, chunks=chunks,
             igs=(gsre + 1j*gsim),
-            igt=( 25. + 1j*gsim)
+            igt=(25.*scale + 1j*gsim)
         )
 
         # gen_ddpip_5d(ranges, chunks=chunks)

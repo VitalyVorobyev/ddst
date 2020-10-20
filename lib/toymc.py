@@ -10,8 +10,7 @@ PATH_TOYMCDATA = '../mcsamples'
 def toymc_sample_fname(re, im ,ch):
     """ Smeared toy MC data set file name """
     fname = os.path.join(
-        PATH_TOYMCDATA,
-        f'mc_ddpip_3d_gs{re:.2f}_{im:.2f}_ch{ch}_smeared.npy')
+        PATH_TOYMCDATA, f'mc_ddpip_3d_gs{re:.2f}_{im:.2f}_ch{ch}_smeared.npy')
     if not os.path.isfile(fname):
         print(f'file {fname} not found')
         return None
@@ -35,9 +34,8 @@ class MCProducer():
         self.phsp = phsp
         self.ndim = len(phsp)
         self.chunk_size = 10**7
-        self.maj = self.assess_maj() if maj is None else maj
-        # self.gen = np.random.Generator(np.random.PCG64(seed))
         self.gen = np.random.default_rng(seed)
+        self.maj = self.assess_maj() if maj is None else maj
         print(f'maj: {self.maj:.2f}')
 
 
@@ -65,24 +63,14 @@ class MCProducer():
 
         return np.vstack(result)
 
-    
+
     def get_chunk(self):
         """ Generates uniform sample in the X space """
-        # Generate random number in the unit box
-        data = self.gen.uniform((self.chunk_size, self.ndim))
-        # data = np.random.random((self.chunk_size, self.ndim))
-
-        # Rescale each dimension
-        for i, rng in enumerate(self.phsp):
-            data[:,i] = rng[0] + data[:,i] * (rng[1] - rng[0])
-
-        return data
-
+        return self.gen.uniform(self.phsp[:,0], self.phsp[:,1], size=(self.chunk_size, self.ndim))
 
     def get_xi(self):
         """ Random variable for the accept-reject algorithm """
-        return self.gen.uniform((self.chunk_size, 1)) * self.maj
-        # return np.random.random((self.chunk_size, 1)) * self.maj
+        return self.gen.uniform(high=self.maj, size=self.chunk_size).reshape(-1, 1)
 
 
     def assess_maj(self):
