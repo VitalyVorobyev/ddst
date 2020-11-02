@@ -241,14 +241,16 @@ def draw_1d_projections(ax, e, pd, mdpi, bins=250, weights=None, alpha=None,
 def draw_pdf_projections(ax, x, y, label=None):
     """ Plot 1D projection of 3D PDF given it's values for a
         regular 3D meshgrid """
-    labels = (r'$E (MeV)$', r'$p(D^0)$ (MeV)', r'$m(D^0pi^+)$ (MeV)')
+    # labels = (r'$E (MeV)$', r'$p(D^0)$ (MeV)', r'$m(D^0pi^+)$ (MeV)')
     dx = [item[1] - item[0] for item in x]
     projs = [y.sum(axis=atup) * dx[atup[0]] * dx[atup[1]]
         for atup in [(0,2), (1,2), (0,1)]]
         # for atup in [(1,2), (0,2), (0,1)]]
-    for idx, (lbl, xi, pro) in enumerate(zip(labels, x, projs)):
+    # for idx, (lbl, xi, pro) in enumerate(zip(labels, x, projs)):
+    for idx, (xi, pro) in enumerate(zip(x, projs)):
         ax[idx].plot(xi, pro, label=label)
+        print('proj norm', np.sum(pro) * (xi[1] - xi[0]))
         if label:
             ax[idx].legend()
-        ax[idx].grid()
-        ax[idx].set_xlabel(lbl)
+        # ax[idx].grid()
+        # ax[idx].set_xlabel(lbl)

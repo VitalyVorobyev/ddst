@@ -43,7 +43,6 @@ def local_grid_nd(data: Iterable, sigma: Iterable,
             meshgrid([item[1] for item in grids]),
             np.prod([item[2] for item in grids]))
 
-
 def norm(x, s):
     return np.exp(-0.5 * (x / s)**2) / ((2.*np.pi)**(0.5) * s)
 
@@ -67,7 +66,7 @@ def convolve_1d(lo: float, hi:float, pdf:Callable, sigma:Callable, ndots=512):
     for idx, (p, s) in enumerate(zip(pdf(xgrid), sigma(xgrid))):
         result[idx:idx+2*ndots] += p*norm(ygrid, s)
     return (xgrid, result[ndots:-ndots] * delta / ndots)
-
+    
 def build_box(data:np.ndarray):
     """ Rectangular box containing all events. Arg. data: [N x ndim] """
     return np.array([[data[:,i].min(), data[:,i].max()] for i in range(data.shape[1])])

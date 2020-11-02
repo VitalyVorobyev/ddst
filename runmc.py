@@ -19,8 +19,10 @@ def make_espace(erng):
     """ """
     return [erng[0], erng[1]] # energy range
 
+
 def make_s_space(erng):
     return [vt.e_to_s(erng[0]), vt.e_to_s(erng[1])]
+
 
 def make_space_3d(erng, tddmax, mdpirng):
     """ """
@@ -30,12 +32,14 @@ def make_space_3d(erng, tddmax, mdpirng):
         [mdpirng[0]**2, mdpirng[1]**2],     # m^2(Dpi+) range
     ])
 
+
 def make_space_5d(erng, tddmax, mdpirng, gsre, gsim):
     """ """
     return np.stack(make_space_3d(erng, tddmax, mdpirng), np.array[
         [gsre[0], gsre[1]], # gsre range
         [gsim[0], gsim[1]], # gsim range
     ])
+
 
 def gen_ddpip(space, chunks, igs=gs, igt=gt):
     """ Main MC driver """
@@ -46,6 +50,7 @@ def gen_ddpip(space, chunks, igs=gs, igt=gt):
     data = driver(chunks=chunks)
 
     np.save(f'mc_ddpip_{data.shape[1]}d_gs{igs.real:.2f}_{igs.imag:.2f}_ch{chunks}', data)
+
 
 def gen_ddpip_3d(ranges, chunks, igs=gs, igt=gt):
     """ """
@@ -92,6 +97,7 @@ def generate_3d_on_grid(chunks):
     for re, im in product(gsre, gsim):
         print(f'generating {re:.2f} + i{im:.2f} ...')
         gen_ddpip_3d(ranges, chunks=chunks, igs=(re+1j*im), igt=(25+1j*im))
+
 
 if __name__ == '__main__':
     try:

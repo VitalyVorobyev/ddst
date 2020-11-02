@@ -89,31 +89,42 @@ def norm_1d_fit():
     print(corrmtx)
 
 
-def proj_plots(ax, sample, wgrid=True):
+def proj_plots(ax, sample, wgrid=True, bins=100):
     for i, a in enumerate(ax[0]):
-        a.hist(sample[:,i], bins=100, histtype='step', density=True)
+        a.hist(sample[:,i], bins=bins, histtype='step', density=True)
         if wgrid:
             a.grid()
     for i, a in enumerate(ax[1]):
-        a.scatter(sample[:,(i+0)%3], sample[:,(i-1)%3], s=0.4)
+        a.scatter(sample[:, i%3], sample[:, (i-1)%3], s=0.4)
         if wgrid:
             a.grid()
 
+def mc_integral(pdf, box):
+    gen = np.random.default_rng()
+    N = 10**7
+    sample = [gen.uniform(box[i,0], box[i,1], N) for i in range(box.shape[0])]
+    volume = np.prod(box[:, 1] - box[:, 0])
+    print(volume)
+    volume = 1
+    return np.mean(pdf(sample)) * volume
+
 def fit_model():
+    gs = 42 + 1.3j
+    gt = 25000 + 1.3j
+    ch = 5
+    smeared = False
+
     # sample_path = 'mcsamples'
     sample_path = '.'
-    sample_file = 'mc_ddpip_3d_gs42.00_1.30_ch5.npy'
-    # sample_file = 'mc_ddpip_3d_gs40.00_1.50_ch10.npy'
-    # sample_file = 'mc_ddpip_3d_gs40.00_1.50_ch10_smeared.npy'
-    sample_raw = np.load(os.path.join(sample_path, sample_file))
+    sample_file = f'mc_ddpip_3d_gs{gs.real:.2f}_{gs.imag:.2f}_ch{ch}'
+    if smeared:
+        sample_file += '_smeared'
+    sample_raw = np.load(os.path.join(
+        sample_path,
+        '.'.join([sample_file, 'npy'])))
     print(sample_raw[:3] / prm.scale**2)
     print(sample_raw.shape)
-
-    fig1, ax1 = plt.subplots(ncols=3, nrows=2, figsize=(14.5, 9))
-    if True:
-        proj_plots(ax1, sample_raw / prm.scale**2)
-    fig1.tight_layout()
-
+    
     # pd, md1pi = vartools.generated_to_observables(
     #     sample_raw[:,1], sample_raw[:,2])
 
@@ -123,22 +134,24 @@ def fit_model():
     # print(sample.shape)
 
     data_box = cnv.build_box(sample_raw)
+    print(data_box)
     bins = np.ones(data_box.shape[0], dtype=np.int32) * 256
     box_ticks = list(map(lambda x: x / prm.scale**2, cnv.ticks_in_box(data_box, bins)))
     box_grid = cnv.grid_in_box(data_box, bins)
 
-    gs = 42 + 1.3j
-    gt = 25000 + 1.3j
     pdf = DnDnPip(gs, gt)
     f = pdf.pdf(s=box_grid[0], mddsq=box_grid[1], md1pisq=box_grid[2])
-    # f = pdf.pdf_vars(*box_grid)
     print(f.shape)
+    pdf_norm = mc_integral(lambda x: pdf.pdf(s=x[0], mddsq=x[1], md1pisq=x[2]), data_box)
+    print(f'pdf_norm: {pdf_norm:3f}')
 
-    fig, ax = plt.subplots(ncols=3, nrows=1, figsize=(14.5, 4.5))
-    plots.draw_pdf_projections(ax, box_ticks, f)
+    fig, ax = plt.subplots(ncols=3, nrows=2, figsize=(14.5, 9))
+    nbins = 256
+    f *= sample_raw.shape[0] / pdf_norm
+    proj_plots(ax, sample_raw / prm.scale**2, bins=nbins)
+    plots.draw_pdf_projections(ax[0], box_ticks, f)
     fig.tight_layout()
     plt.show()
-
 
     # convolve_nd(
     #     data_box,
