@@ -10,3 +10,4 @@ mcsamples
 token.pickle
 credentials.json
 *.zip
+.vscode

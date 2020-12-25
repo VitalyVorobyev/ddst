@@ -9,12 +9,8 @@ from .dalitzphsp import DalitzPhsp, Kibble
 from .lineshape import TMtx, RelativisticBreitWigner, MagSq
 from . import vartools as vt
 
-
 class DnDnPip(DalitzPhsp):
     """ The [Tcc -> D0 [D*+ -> D0 pi+]] decay amplitude """
-
-    verb=False
-
     def __init__(self, gs=gs, gt=gt, E=0, channels=[include_dstndp, include_dd_swave]):
         super(DnDnPip, self).__init__(E + TMtx.thr, mdn, mdn, mpip)
         self.tmtx = TMtx(gs, gt)
@@ -33,10 +29,6 @@ class DnDnPip(DalitzPhsp):
         self.t = np.sum(tmtx[0])
         self.tin = Rin * (g1*self.t + g2*np.sum(tmtx[1]))
         self.setM(E + TMtx.thr)
-        if self.verb:
-            print('##### DDPi: E {:.3f} MeV #####'.format(E*10**3))
-            print('  mX:  {:.3f} MeV'.format(self.mo*10**3))
-            print('   t:  {:.3f}'.format(self.t))
 
     def inelastic(self):
         """  """
@@ -52,9 +44,9 @@ class DnDnPip(DalitzPhsp):
     def pdf_vars(self, e, pd, mdpi):
         """ Convenience function for PDF in terms of the observables
         Args:
-          - e: energy (MeV)
-          - pd: p(D) (MeV)
-          - mdpi: m(Dpi) (MeV)
+          - e: energy
+          - pd: p(D)
+          - mdpi: m(Dpi)
         """
         s, mddsq, md1pisq = vt.observables_to_mandelstam(e, pd, mdpi)
         return self.pdf_3d(s, mddsq, md1pisq)
@@ -62,9 +54,9 @@ class DnDnPip(DalitzPhsp):
     def pdf_3d(self, s, mddsq, md1pisq):
         """ 3D PDF
         Args:
-          - s: Mandelstam variable (GeV^2)
-          - mddsq: m^2(DD) (GeV^2)
-          - md1pisq: m^2(Dpi) (GeV^2)
+          - s: Mandelstam variable
+          - mddsq: m^2(DD)
+          - md1pisq: m^2(Dpi)
         """
         mask = self.isInPhsp(s, mddsq, md1pisq)
         result = np.zeros(mask.shape, dtype=float)
@@ -76,15 +68,10 @@ class DnDnPip(DalitzPhsp):
         E = mMo - TMtx.thr
         mMov, Ev, sv, mddsqv, md1pisqv = [x[mask] for x in [mMo, E, s, mddsq, md1pisq]]
 
-        # pre-calculations
         md2pisqv = self.mijsq(sv, mddsqv, md1pisqv)
-        # T-matrix factor
         tv = np.sum(self.tmtx(Ev)[0], axis=0)
-        # Dalitz plot amplitude
         amp = tv * (self.bwdstp(md1pisqv) + self.bwdstp(md2pisqv))
-        # pion momentum squared
         kine = 2 * mpip * self.iKineFramejk(mMov, mpip, mddsqv)
-        # Full amplitude
         result[mask] = kine * MagSq(amp)
         return result
 
@@ -124,19 +111,11 @@ class DnDnPip(DalitzPhsp):
             gtv = gt.real + 1j*gsim
             self.tmtx.set_gs_gt(gsv, gtv)
 
-        # pre-calculations
         md2pisqv = self.mijsq(sv, mddsqv, md1pisqv)
-
-        # T-matrix factor
         tv = np.sum(self.tmtx(Ev)[0], axis=0)
-
-        # Dalitz plot amplitude
         amp = tv * (self.bwdstp(md1pisqv) + self.bwdstp(md2pisqv))
-
-        # pion momentum squared
         kine = 2 * mpip * self.iKineFramejk(mMov, mpip, mddsqv)
 
-        # Full amplitude
         result[mask] = kine * MagSq(amp)
         return result
 

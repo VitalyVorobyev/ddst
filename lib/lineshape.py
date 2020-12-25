@@ -19,10 +19,11 @@ def DstnWidth(s):
     return gamma_star_n_dngam + gamma_star_n_dnpin *\
         (deltaE / delta000)**(1.5)
 
-def RbwDstn(s):
+def RbwDstn(s, e_dep_width=True):
     """ D*0 RWB with energy-dependent width """
-    return 1. / (mdstnSq - s - 1j*mdstn*DstnWidth(s))
-    # return 1. / (mdstnSq - s - 1j*mdstn*gamma_star_n)
+    if e_dep_width:
+        return 1. / (mdstnSq - s - 1j*mdstn*DstnWidth(s))
+    return 1. / (mdstnSq - s - 1j*mdstn*gamma_star_n)
 
 def MagSq(z):
     return z.real**2 + z.imag**2

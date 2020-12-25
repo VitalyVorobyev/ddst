@@ -82,10 +82,6 @@ class DalitzPhsp():
         """ double scalar product of pB and pC in the AB system """
         return self.daSq[1] + self.daSq[2] - mBCsq + 2.*self.eB_AB(mABsq)*self.eC_AB(mABsq)
 
-    # def dbl_pBpC_AB(self, mABsq, mBCsq):
-    #     """ double scalar product of pB and pC in the AB system """
-    #     return self.daSq[1] + self.daSq[2] - mBCsq + 2.*self.eB_AB(mABsq)*self.eC_AB(mABsq)
-
     def eC_AC(self, mACsq):
         """ E(C) in the (AC) frame """
         return 0.5 * (mACsq - self.daSq[0] + self.daSq[2]) / np.sqrt(mACsq)

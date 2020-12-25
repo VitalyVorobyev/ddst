@@ -3,8 +3,8 @@
 import numpy as np
 from scipy.interpolate import interp1d
 from scipy.stats import norm
-import jax
-import jax.numpy as jnp
+# import jax
+# import jax.numpy as jnp
 
 import matplotlib.pyplot as plt
 
@@ -38,11 +38,11 @@ def smddpi2(e, pd):
 
 def stdd(tdd):
     """ sigma(m_DD) """
-    return jnp.sqrt(2*tdd/mdn)*sigma_mdn
+    return np.sqrt(2*tdd/mdn)*sigma_mdn
 
 def spd():
     """ sigma(p_D) """
-    return sigma_mdn / jnp.sqrt(2)
+    return sigma_mdn / np.sqrt(2)
 
 def smear_tdd(tdd, p, dots=250):
     """ """
@@ -92,19 +92,36 @@ def smear_e_const(e, ev, tdd=None, ptdd=None, dots=250, sigma=0.00035*scale):
     """ """
     return (norm.pdf(ev, e, sigma), sigma)
 
-@jax.jit
-def sample(events: np.ndarray) -> (np.ndarray):
+# @jax.jit
+# def sample(events: np.ndarray) -> (np.ndarray):
+#     """ Resolution sampler for MC events
+#     Args:
+#         - events: [E (MeV), m^2(DD) (GeV^2), m^2(Dpi) (GeV^2)]
+#     """
+#     e = events[:,0] * 10**-3
+#     tdd = jnp.sqrt(events[:,1]) - 2*mdn
+#     mdpi = jnp.sqrt(events[:,2])
+
+#     offsets = jax.random.normal(jax.random.PRNGKey(1), events.shape)
+
+#     return jnp.column_stack([
+#         (e + smddpi(e, tdd) * offsets[:,0]) * 10**3,
+#         (tdd + stdd(tdd) * offsets[:,1] + 2*mdn)**2,
+#         (mdpi + smdstp() * offsets[:,2])**2,
+#     ])
+
+def sample(events: np.ndarray, seed=None) -> (np.ndarray):
     """ Resolution sampler for MC events
     Args:
         - events: [E (MeV), m^2(DD) (GeV^2), m^2(Dpi) (GeV^2)]
     """
     e = events[:,0] * 10**-3
-    tdd = jnp.sqrt(events[:,1]) - 2*mdn
-    mdpi = jnp.sqrt(events[:,2])
+    tdd = np.sqrt(events[:,1]) - 2*mdn
+    mdpi = np.sqrt(events[:,2])
 
-    offsets = jax.random.normal(jax.random.PRNGKey(1), events.shape)
+    offsets = np.random.default_rng(seed=seed).normal(loc=0, scale=1, shape=events.shape)
 
-    return jnp.column_stack([
+    return np.column_stack([
         (e + smddpi(e, tdd) * offsets[:,0]) * 10**3,
         (tdd + stdd(tdd) * offsets[:,1] + 2*mdn)**2,
         (mdpi + smdstp() * offsets[:,2])**2,

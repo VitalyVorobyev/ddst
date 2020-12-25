@@ -20,7 +20,7 @@ def p_to_mddst(p):
     return (p**2 / mdn + 2.*mdn)**2
 
 def observables_to_mandelstam(e, pd, md1pi):
-    """ (E, p(D), m(Dpi+)) (MeV) -> (s, m^2(DD), m^2(Dpi+)) (GeV) """
+    """ (E, p(D), m(Dpi+)) -> (s, m^2(DD), m^2(Dpi+)) """
     return (
         (e + mdn + mdstp)**2,         # s
         (pd**2**3 / mdn + 2*mdn)**2,  # m^2(DD)
