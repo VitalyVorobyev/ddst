@@ -130,3 +130,27 @@ def sample(events: np.ndarray, seed=None) -> (np.ndarray):
 def get_resolution(e, pd):
     """ """
     return (smddpi2(e / 10**3, pd / 10**3)*10**3, spd()*10**3, smdstp()*10**3)
+
+
+def merge(x1, y1, x2, y2, bins=5000):
+    newx = np.linspace(min(x1[0], x2[0]), max(x1[-1], x2[-1]), bins)
+
+    applo1 = newx[newx<x1[0]]
+    x1 = np.append(applo1, x1)
+    y1 = np.append(np.zeros(applo1.shape), y1)
+
+    applo2 = newx[newx<x2[0]]
+    x2 = np.append(applo2, x2)
+    y2 = np.append(np.zeros(applo2.shape), y2)
+
+    apphi1 = newx[newx>x1[-1]]
+    x1 = np.append(x1, apphi1)
+    y1 = np.append(y1, np.zeros(apphi1.shape))
+
+    apphi2 = newx[newx>x2[-1]]
+    x2 = np.append(x2, apphi2)
+    y2 = np.append(y2, np.zeros(apphi2.shape))
+
+    y1new = interp1d(x1, y1, kind='cubic')(newx)
+    y2new = interp1d(x2, y2, kind='cubic')(newx)
+    return (newx, y1new+y2new)

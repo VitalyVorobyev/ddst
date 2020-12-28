@@ -13,47 +13,21 @@ import matplotlib.pyplot as plt
 from lib.dndnpip import DnDnPip
 from lib.dndppin import DnDpPin
 from lib.dndpgam import DnDpGam
-from lib.resolution import smear_tdd, smear_e, smear_mdpi, smear_e_const
+from lib.resolution import smear_tdd, smear_e, smear_mdpi, smear_e_const, merge
 from lib.params import gs, gt, mdn, mdp
 
-
-def merge(x1, y1, x2, y2, bins=5000):
-    newx = np.linspace(min(x1[0], x2[0]), max(x1[-1], x2[-1]), bins)
-
-    applo1 = newx[newx<x1[0]]
-    x1 = np.append(applo1, x1)
-    y1 = np.append(np.zeros(applo1.shape), y1)
-
-    applo2 = newx[newx<x2[0]]
-    x2 = np.append(applo2, x2)
-    y2 = np.append(np.zeros(applo2.shape), y2)
-
-    apphi1 = newx[newx>x1[-1]]
-    x1 = np.append(x1, apphi1)
-    y1 = np.append(y1, np.zeros(apphi1.shape))
-
-    apphi2 = newx[newx>x2[-1]]
-    x2 = np.append(x2, apphi2)
-    y2 = np.append(y2, np.zeros(apphi2.shape))
-
-    y1new = interp1d(x1, y1, kind='cubic')(newx)
-    y2new = interp1d(x2, y2, kind='cubic')(newx)
-    return (newx, y1new+y2new)
-
+include_swave = False
 
 def init_observs(elo=-2, ehi=8, nEbins=256, nABbins=256, nACbins=256, nBCbins=256):
-    """
-        Makes a dictionary for observables
-        {key : [np.ndarray, callable(E)]}
-    """
+    """ """
     E = np.linspace(elo, ehi, nEbins)
     ddpipFull = DnDnPip(gs, gt, E[-1], [True, include_swave])
 
     ab_space = ddpipFull.linspaceAB(nABbins)
     ac_space = ddpipFull.linspaceAC(nACbins)
-    tdd_space = np.sqrt(ab_space) - (mdn + mdn)
-    delta_ab = ab_space_ddpip[1] - as_space_ddpip[0]
-    delta_ac = ac_space_ddpip[1] - ac_space_ddpip[0]
+    tdd_space = np.sqrt(ab_space) - 2*mdn
+    delta_ab = ab_space[1] - ab_space[0]
+    delta_ac = ac_space[1] - ac_space[0]
 
     gridABAC = ddpipFull.mgridABAC(nABbins, nACbins)[0]
     gridAB, gridAC = gridABAC[0], gridABAC[1]
@@ -62,8 +36,7 @@ def init_observs(elo=-2, ehi=8, nEbins=256, nABbins=256, nACbins=256, nBCbins=25
     gridACp, gridBCp = gridACBC[0], gridACBC[1]
     ddpi_mask = (gridBCp > gridACp)
 
-
-    def commonCalcDdpipFull(energy):
+    def processEnergy(energy):
         ddpipFull.setE(energy)
         mab = delta_ac * ddpipFull(gridAB, gridAC)[0].sum(axis=0)
 
@@ -93,7 +66,7 @@ def init_observs(elo=-2, ehi=8, nEbins=256, nABbins=256, nACbins=256, nBCbins=25
             data_d0pib += mac.sum() * delta_ac
 
     def update_ddpis(idx, mab, mac):
-        data_ddpis += smear_e(energy, E, tdd_space, mab)[0]]
+        data_ddpis += smear_e(energy, E, tdd_space, mab)[0]
 
     obs = [
         ['DDpi', data_ddpi, update_ddpi],
@@ -102,43 +75,81 @@ def init_observs(elo=-2, ehi=8, nEbins=256, nABbins=256, nACbins=256, nBCbins=25
         ['DDpiS', data_ddpis, update_ddpis],
     ]
 
-    return (E, commonCalc, obs, ab_space, tdd_space)
+    return (E, processEnergy, obs, ab_space, ac_space, tdd_space)
 
 
 def run(elo=-2, ehi=8):
     """ """
-    E, commonCalc, observs, ab_space, tdd_space = init_observs(
+    E, processEnergy, observs, ab_space, ac_space, tdd_space = init_observs(
         elo=elo, ehi=ehi, nEbins=256, nABbins=256, nACbins=256, nBCbins=256)
 
     for idx, energy in enumerate(E):
         print('E {:.3f} MeV'.format(energy*10**3))
-        mab, mac = commonCalc(energy)
+        mab, mac = processEnergy(energy)
         map(lambda x: x[-1](idx, mab, mac), observs)
 
-    observs = {label: data for label, data, _ in  observs.items()}
-    observs.update({
-        'tDDspace' : tdd_space, 'E' : E,
-        'tD0D0' : observs['D0D0'] * 2 * np.sqrt(ab_space),
+    observs = {label: data for label, data, _ in  observs}
+    
+    pdndn = observs['D0D0'] * 2 * np.sqrt(ab_space)
+    pdd_space = np.sqrt(tdd_space * mdn)
+    mdpi_space = np.sqrt(ac_space)
+    mdpi_below = observs['D0pi'][0] * 2 * mdpi_space
+    mdpi_above = observs['D0pi'][1] * 2 * mdpi_space
+    mdpis_space, mdpiS_below = smear_mdpi(mdpi_space, mdpi_below, 1024)
+    _, mdpiS_above = smear_mdpi(mdpi_space, mdpi_above, 1024)
+    tdds_space, pdds = smear_tdd(tdd_space, pdndn, dots=1000)
+    pdds_space = np.sqrt(tdds_space * mdn)
 
+    observs.update({
+        'tD0D0space' : tdd_space,
+        'tD0D0Sspace' : tdds_space,
+        'pD0D0space' : pdd_space,
+        'pD0D0Sspace' : pdds_space,
+        'mD0pi_space': mdpi_space,
+        'mD0piS_space': mdpis_space,
+        'E' : E,
+        'pD0D0' : pdndn,
+        'pD0D0S' : pdds,
+        'mD0pi_below': mdpi_below,
+        'mD0pi_above': mdpi_above,
+        'mD0piS_below': mdpiS_below,
+        'mD0piS_above': mdpiS_above,
     })
 
-    return observs
+    for key, value in observs.items():
+        print(f'{key}:\n{value}')
+
+    # make_observs_plot(observs)
 
 
 def dndnpi_plot(ax, observs, elo=-2, ehi=15, key='DDpi'):
     ax.set(xlabel=r'$E$ (MeV)', ylim=(0, 1.01), xlim=(elo, ehi))
-    ax.plot(observs('E'), observs[key] / observs[key].max(), label=r'$D^0D^0\pi^+$')
+    ax.plot(observs['E'], observs[key] / observs[key].max(), label=r'$D^0D^0\pi^+$')
 
 
-def dndnpis_plot(ax, observs, elo=-2, ehi=15)
+def dndnpis_plot(ax, observs, elo=-2, ehi=15):
     dndnpi_plot(ax, observs, elo=elo, ehi=ehi, key='DDpiS')
 
 
-def tdd_plot(ax, observs, tddhi):
-    tddspace = [x*10**3 for x in tddspace]
-    pdndn   = I['D0D0']   * 2 * np.sqrt(abspace[0])
-    cax.set(xlabel=r'$T(DD)$ (MeV)', ylim=(0, 1.01), xlim=(0, min(ehi*2, 15)))
-    cax.plot(tddspace[0], pdndn / ymax, label=r'$D^0D^0$')
+def pdd_plot(ax, observs, pddhi, key='pD0D0'):
+    ax.set(xlabel=r'$p(DD)$ (MeV)', ylim=(0, 1.01), xlim=(0, pddhi))
+    ax.plot(observs[f'{key}space'], observs[key] / observs[key].max(), label=r'$D^0D^0$')
+
+
+def pdds_plot(ax, observs, pddhi):
+    pdd_plot(ax, observs, pddhi, key='pD0D0S')
+
+
+def dpi_plot(ax, obervs, pdpihi, key='mD0pi'):
+    ax.set(xlabel=r'$m(D^0\pi^+)$ (MeV)', ylim=(0, 1.01), xlim=(0, pdpihi))
+    mD0pi = obervs[f'{key}_above'] + obervs[f'{key}_below']
+    ymax = mD0pi.max()
+    ax.plot(obervs[f'{key}_space'], mD0pi / ymax, label=r'$D^0\pi^+$ high')
+    ax.plot(obervs[f'{key}_space'], obervs[f'{key}_above'] / ymax, '--', label=r'$D^0\pi^+$ high, $E>0$')
+    ax.plot(obervs[f'{key}_space'], obervs[f'{key}_below'] / ymax, ':',  label=r'$D^0\pi^+$ high, $E<0$')
+
+def dpis_plot(ax, obervs, pdpihi):
+    dpi_plot(ax, obervs, pdpihi, key='mD0piS')
 
 
 def make_observs_plot(observs):
@@ -150,41 +161,10 @@ def make_observs_plot(observs):
 
     dndnpi_plot(ax[0,0], observs)  # Energy w/o smearing
     dndnpis_plot(ax[1,0], observs)  # Energy w/ smearing
-    tdd_plot(ax[0,1], observs)  # T(DD) w/o smearing
-
-    # m(DD) w/ smearing
-    cax = ax[1,1]
-    for x in tddspace:
-        x[0] += 1.e-6
-    dndns = smear_tdd(tddspace[0]/10**3, pdndn, dots=1000)
-    x, y = merge(*pdndppis, *pdndpgas)
-    ymax = max(np.max(dndns[1]), np.max(y))
-
-    cax.set(xlabel=r'$T(DD)$ (MeV)', ylim=(0, 1.01), xlim=(0, min(ehi*2, 15)))
-    cax.plot(dndns[0], dndns[1] / ymax, label=r'$D^0D^0$')
-
-    # m(Dpi) w/o smearing
-    cax = ax[0,2]
-    pdnpiAbove = I['D0piAbove'] * 2 * np.sqrt(acspace[0])
-    pdnpiBelow = I['D0piBelow'] * 2 * np.sqrt(acspace[0])
-    x = np.sqrt(acspace[0])
-    ytotal = pdnpiAbove + pdnpiBelow
-    ymax = max(ytotal)
-    cax.set(xlabel=r'$m(D^0\pi^+)$ (GeV)', ylim=(0, 1.01), xlim=(x[0], min(x[-1], 2.02)))
-    cax.plot(x, ytotal     / ymax,       label=r'$D^0\pi^+$ high')
-    cax.plot(x, pdnpiAbove / ymax, '--', label=r'$D^0\pi^+$ high, $E>0$')
-    cax.plot(x, pdnpiBelow / ymax, ':',  label=r'$D^0\pi^+$ high, $E<0$')
-
-    # m(Dpi) w/ smearing
-    cax = ax[1,2]
-    cax.set(xlabel=r'$m(D^0\pi^+)$ (GeV)', ylim=(0, 1.01), xlim=(x[0], min(x[-1], 2.02)))
-    x0, y0 = smear_mdpi(x, pdnpiAbove, 1024)
-    xp, yp = smear_mdpi(x, pdnpiBelow, 1024)
-    ytotal = y0 + yp
-    ymax = max(ytotal)
-    cax.plot(x0, ytotal / ymax,       label=r'$D^0\pi^+$ high')
-    cax.plot(x0,    y0  / ymax, '--', label=r'$D^0\pi^+$ high, $E>0$')
-    cax.plot(xp,    yp  / ymax, ':',  label=r'$D^0\pi^+$ high, $E<0$')
+    pdd_plot(ax[0,1], observs, pddhi=150)  # p(DD) w/o smearing
+    pdds_plot(ax[1,1], observs, pddhi=150)  # p(DD) w/ smearing
+    dpi_plot(ax[0,2], observs, pdpihi=150)  # p(Dpi) w/o smearing
+    dpis_plot(ax[1,2], observs, pdpihi=150)  # p(Dpi) w/ smearing
 
     for a in ax.ravel():
         a.legend(fontsize=16)
@@ -195,8 +175,8 @@ def make_observs_plot(observs):
     plt.show()
 
 if __name__ == '__main__':
-    try:
+    # try:
         elo, ehi = list(map(float, sys.argv[1:]))
         run(elo, ehi)
-    except ValueError:
-        print('Usage: ./observables [E low] [E high]')
+    # except ValueError:
+        # print('Usage: ./observables [E low] [E high]')
