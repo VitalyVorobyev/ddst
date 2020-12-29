@@ -68,7 +68,6 @@ phiinp = 1.*np.pi  # p-wave amplitude phase
 phiins = 1.*np.pi  # s-wave amplitude phase
 #######################
 
-
 datapath = '/home/vitaly/work/lhcb/DDpi'
 datafile = '/'.join([datapath, 'all.root'])
 

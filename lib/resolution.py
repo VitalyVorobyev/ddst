@@ -10,16 +10,46 @@ import matplotlib.pyplot as plt
 
 from .params import sigma_ppi, sigma_mdn, mpip, mdn, mdstp, scale, tpi
 
-sppiSq = sigma_ppi**2
-smdSq = sigma_mdn**2
-
+####### Tools #######
 def spline(x, y, newx):
     """ Cubic spline """
     return interp1d(x, y, kind='cubic')(newx).reshape(1, -1)
 
+
+def merge(x1, y1, x2, y2, bins=5000):
+    newx = np.linspace(min(x1[0], x2[0]), max(x1[-1], x2[-1]), bins)
+
+    applo1 = newx[newx<x1[0]]
+    x1 = np.append(applo1, x1)
+    y1 = np.append(np.zeros(applo1.shape), y1)
+
+    applo2 = newx[newx<x2[0]]
+    x2 = np.append(applo2, x2)
+    y2 = np.append(np.zeros(applo2.shape), y2)
+
+    apphi1 = newx[newx>x1[-1]]
+    x1 = np.append(x1, apphi1)
+    y1 = np.append(y1, np.zeros(apphi1.shape))
+
+    apphi2 = newx[newx>x2[-1]]
+    x2 = np.append(x2, apphi2)
+    y2 = np.append(y2, np.zeros(apphi2.shape))
+
+    y1new = interp1d(x1, y1, kind='cubic')(newx)
+    y2new = interp1d(x2, y2, kind='cubic')(newx)
+    return (newx, y1new+y2new)
+#######
+
+sppiSq = sigma_ppi**2
+smdSq = sigma_mdn**2
+
 def smdstp(tpi=tpi):
     """ sigma(D*+) """
     return np.sqrt(2*tpi/mpip)*sigma_ppi
+
+def smdstp0(ppi):
+    """ sigma(D*+) """
+    return ppi / mpip * sigma_ppi
 
 def kine_pi(e):
     """ Kinetic energy of pi+ T(pi+) """
@@ -51,6 +81,18 @@ def smear_tdd(tdd, p, dots=250):
     r = norm.pdf(xr, yr, stdd(yr))
     r /= np.sum(r, axis=0)
     return (newx, np.sum(spline(tdd, p, newx) @ r, axis=0))
+
+def smear_pd(pd, p, dots=250):
+    """ Args:
+      - pd - linspace for D0 momentum
+      - p - corresponding PDF for D0 momenrtum
+      - dots - size of linspace after smearing
+    """
+    newx = np.linspace(pd[0], pd[-1], dots)
+    xr, yr = np.meshgrid(newx, newx)
+    r = norm.pdf(xr, yr, spd())
+    r /= np.sum(r, axis=0)
+    return (newx, np.sum(spline(pd, p, newx) @ r, axis=0))
 
 def smear_mdpi(mdpi, p, dots=250):
     """ """
@@ -88,9 +130,14 @@ def smear_e(e, ev, tdd, ptdd, dots=250):
     return (np.sum(newptdd.reshape(1,-1) @ r, axis=0),
             np.average(smddpi(e, newtdd.T), weights=newptdd))
 
-def smear_e_const(e, ev, tdd=None, ptdd=None, dots=250, sigma=0.00035*scale):
-    """ """
-    return (norm.pdf(ev, e, sigma), sigma)
+def smear_e0(e, ev, pd, ppd):
+    """ e: float - current energy
+        ev: np.array - energy linspace
+        pd - p(D)
+        ppd - p(D) pdf
+    """
+    er, pdr = np.meshgrid(ev, pd)
+    return np.sum(ppd.reshape(1,-1) @ norm.pdf(x=er, loc=e, scale=smddpi2(e, pdr)), axis=0)
 
 # @jax.jit
 # def sample(events: np.ndarray) -> (np.ndarray):
@@ -113,44 +160,20 @@ def smear_e_const(e, ev, tdd=None, ptdd=None, dots=250, sigma=0.00035*scale):
 def sample(events: np.ndarray, seed=None) -> (np.ndarray):
     """ Resolution sampler for MC events
     Args:
-        - events: [E (MeV), m^2(DD) (GeV^2), m^2(Dpi) (GeV^2)]
+        - events: [E, m^2(DD), m^2(Dpi)]
     """
-    e = events[:,0] * 10**-3
+    e = events[:,0]
     tdd = np.sqrt(events[:,1]) - 2*mdn
     mdpi = np.sqrt(events[:,2])
 
     offsets = np.random.default_rng(seed=seed).normal(loc=0, scale=1, shape=events.shape)
 
     return np.column_stack([
-        (e + smddpi(e, tdd) * offsets[:,0]) * 10**3,
+        (e + smddpi(e, tdd) * offsets[:,0]),
         (tdd + stdd(tdd) * offsets[:,1] + 2*mdn)**2,
         (mdpi + smdstp() * offsets[:,2])**2,
     ])
 
 def get_resolution(e, pd):
     """ """
-    return (smddpi2(e / 10**3, pd / 10**3)*10**3, spd()*10**3, smdstp()*10**3)
-
-
-def merge(x1, y1, x2, y2, bins=5000):
-    newx = np.linspace(min(x1[0], x2[0]), max(x1[-1], x2[-1]), bins)
-
-    applo1 = newx[newx<x1[0]]
-    x1 = np.append(applo1, x1)
-    y1 = np.append(np.zeros(applo1.shape), y1)
-
-    applo2 = newx[newx<x2[0]]
-    x2 = np.append(applo2, x2)
-    y2 = np.append(np.zeros(applo2.shape), y2)
-
-    apphi1 = newx[newx>x1[-1]]
-    x1 = np.append(x1, apphi1)
-    y1 = np.append(y1, np.zeros(apphi1.shape))
-
-    apphi2 = newx[newx>x2[-1]]
-    x2 = np.append(x2, apphi2)
-    y2 = np.append(y2, np.zeros(apphi2.shape))
-
-    y1new = interp1d(x1, y1, kind='cubic')(newx)
-    y2new = interp1d(x2, y2, kind='cubic')(newx)
-    return (newx, y1new+y2new)
+    return (smddpi2(e, pd), spd(), smdstp())
